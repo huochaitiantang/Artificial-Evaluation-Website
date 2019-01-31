@@ -8,18 +8,26 @@ import random
 from flask import Flask
 app = Flask("Turing")
 
+# base setting
 base_name = 'smile'
 item_cnt = 4
 display_size = 128
 
-display_size = min(1024/(item_cnt + 1), display_size)
+# directory infomation
 base_dir = os.path.join('static/data', base_name)
 input_dir = os.path.join(base_dir, "origin")
+if not os.path.exists(input_dir):
+    input_dir = None
+
 result_dirs = []
 for i in range(item_cnt):
     cur_dir = "test{}".format(chr(65 + i))
-    result_dirs.append(os.path.join(base_dir, cur_dir))
+    test_path = os.path.join(base_dir, cur_dir)
+    assert(os.path.exists(test_path))
+    result_dirs.append(test_path)
+
 test_list_name = os.path.join(base_dir, 'test_list.txt')
+display_size = min(1024/(item_cnt + 1), display_size)
 
 # initial test list
 def init_test_list(test_list_name, result_dirs, input_dir=None):
