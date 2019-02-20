@@ -9,9 +9,11 @@ from flask import Flask
 app = Flask("Turing")
 
 # base setting
-base_name = 'smile'
+base_name = 'test'
 item_cnt = 4
 display_size = 128
+random_place = True
+better_rule = '此处为选取规则。'
 
 # directory infomation
 base_dir = os.path.join('static/data', base_name)
@@ -54,7 +56,8 @@ def init_test_list(test_list_name, result_dirs, input_dir=None):
             img_id_inds = range(result_dir_len)
 
             for img_id in img_ids:
-                random.shuffle(img_id_inds)
+                if random_place:
+                    random.shuffle(img_id_inds)
                 for i in range(result_dir_len):
                     f.write("{} ".format(img_id_inds[i]))
                 f.write("\n")
@@ -108,6 +111,7 @@ def do_msg_init():
     info['display_size'] = display_size
     info['input_img_paths'] = input_img_paths
     info['result_img_pathss'] = result_img_pathss
+    info['better_rule'] = better_rule
     return json.dumps(info)
 
 @app.route('/submit/<label_result>')
@@ -136,4 +140,4 @@ def do_submit(label_result):
 
 
 if __name__ == '__main__':
-    app.run(host="127.0.0.1", port=6060, debug=True)
+    app.run(host="127.0.0.1", port=5000, debug=True)

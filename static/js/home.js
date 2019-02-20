@@ -12,10 +12,11 @@ $(document).ready(function(){
                 var input_img_paths = ans['input_img_paths']
                 var result_img_pathss = ans['result_img_pathss']
                 var display_size = ans['display_size']
+                var better_rule = ans['better_rule']
                 var img_cnt = result_img_pathss.length
                 var item_cnt = result_img_pathss[0].length
 
-                display_imgs(input_img_paths, result_img_pathss, img_cnt, item_cnt, display_size)
+                display_imgs(input_img_paths, result_img_pathss, img_cnt, item_cnt, display_size, better_rule)
 
                 $("#submit_button").click(function(){
                     submit_label(img_cnt, item_cnt)
@@ -38,8 +39,9 @@ $(document).ready(function(){
     }
 
     // display all imgs items
-    function display_imgs(input_img_paths, result_img_pathss, img_cnt, item_cnt, display_size){
+    function display_imgs(input_img_paths, result_img_pathss, img_cnt, item_cnt, display_size, better_rule){
         // column infomation div
+        $("#better_rule").html(better_rule)
         var column_info  = "#序号"
         if(input_img_paths != null){
             column_info += " | 原始图片"
