@@ -9,13 +9,13 @@ from flask import Flask
 app = Flask("Turing")
 
 # base setting
-base_name = 'test'
-item_cnt = 4
-display_size = 128
+base_name = 'download_crop_close_50'
+item_cnt = 3
+display_size = 64
 random_place = True
-better_rule = '此处为选取规则。'
-run_ip="127.0.0.1"
-run_port=5000
+better_rule = '下列的图像变换为：将人脸的眼睛由闭合转换为睁开。请从选项中选择转换更为成功的、看起来更为逼真的、与原图像色彩差异较小的结果。'
+run_ip="219.224.168.78"
+run_port=5003
 
 # directory infomation
 base_dir = os.path.join('static/data', base_name)

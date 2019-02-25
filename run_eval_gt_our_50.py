@@ -9,13 +9,13 @@ from flask import Flask
 app = Flask("Turing")
 
 # base setting
-base_name = 'test'
-item_cnt = 4
-display_size = 128
+base_name = 'eval_gt_our'
+item_cnt = 2
+display_size = 64
 random_place = True
-better_rule = '此处为选取规则。'
-run_ip="127.0.0.1"
-run_port=5000
+better_rule = '请从选项中选择看起来更为逼真的、带有笑容的结果。'
+run_ip="219.224.168.78"
+run_port=5005
 
 # directory infomation
 base_dir = os.path.join('static/data', base_name)
