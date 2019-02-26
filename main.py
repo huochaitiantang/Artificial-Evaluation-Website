@@ -5,33 +5,38 @@ import json
 import time
 import flask
 import random
+import argparse
 from flask import Flask
 app = Flask("Turing")
 
-# base setting
-base_name = 'test'
-item_cnt = 4
-display_size = 128
-random_place = True
-better_rule = '此处为选取规则。'
-run_ip="127.0.0.1"
-run_port=5000
+def get_args():
+    # base setting
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_base_dir", type=str, default="static/data/test", help="base data directory")
+    parser.add_argument("--item_cnt", type=int, default=4, help="num of test directories(testA, testB, ...)")
+    parser.add_argument("--display_size", type=int, default=128, help="display size of each image")
+    parser.add_argument("--better_rule", type=str, default="此处为选取规则", help="choose rules")
+    parser.add_argument("--run_ip", type=str, default="127.0.0.1", help="running ip address")
+    parser.add_argument("--run_port", type=int, default=5000, help="running port")
+    parser.add_argument('--random_place', action='store_true', help='random place the images from different directories?')
+    args = parser.parse_args()
+    return args
 
+args = get_args()
 # directory infomation
-base_dir = os.path.join('static/data', base_name)
-input_dir = os.path.join(base_dir, "origin")
+input_dir = os.path.join(args.data_base_dir, "origin")
 if not os.path.exists(input_dir):
     input_dir = None
 
 result_dirs = []
-for i in range(item_cnt):
+for i in range(args.item_cnt):
     cur_dir = "test{}".format(chr(65 + i))
-    test_path = os.path.join(base_dir, cur_dir)
+    test_path = os.path.join(args.data_base_dir, cur_dir)
     assert(os.path.exists(test_path))
     result_dirs.append(test_path)
 
-test_list_name = os.path.join(base_dir, 'test_list.txt')
-display_size = min(1024/(item_cnt + 1), display_size)
+test_list_name = os.path.join(args.data_base_dir, 'test_list.txt')
+args.display_size = min(1024/(args.item_cnt + 1), args.display_size)
 
 # initial test list
 def init_test_list(test_list_name, result_dirs, input_dir=None):
@@ -58,7 +63,7 @@ def init_test_list(test_list_name, result_dirs, input_dir=None):
             img_id_inds = range(result_dir_len)
 
             for img_id in img_ids:
-                if random_place:
+                if args.random_place:
                     random.shuffle(img_id_inds)
                 for i in range(result_dir_len):
                     f.write("{} ".format(img_id_inds[i]))
@@ -110,10 +115,10 @@ def do_home():
 @app.route('/msg_init')
 def do_msg_init():
     info = {}
-    info['display_size'] = display_size
+    info['display_size'] = args.display_size
     info['input_img_paths'] = input_img_paths
     info['result_img_pathss'] = result_img_pathss
-    info['better_rule'] = better_rule
+    info['better_rule'] = args.better_rule
     return json.dumps(info)
 
 @app.route('/submit/<label_result>')
@@ -129,7 +134,7 @@ def do_submit(label_result):
     print(labels, usr_name)
 
     time_str = str(time.time()).replace('.', '_')
-    file_name = os.path.join(base_dir, "{}_{}.txt".format(time_str, usr_name))
+    file_name = os.path.join(args.data_base_dir, "{}_{}.txt".format(time_str, usr_name))
 
     with open(file_name, 'w') as f:
         for label in labels:
@@ -142,4 +147,4 @@ def do_submit(label_result):
 
 
 if __name__ == '__main__':
-    app.run(host=run_ip, port=run_port, debug=True)
+    app.run(host=args.run_ip, port=args.run_port, debug=True)
