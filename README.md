@@ -6,14 +6,25 @@ pip install Flask
 ```
 
 ### Setting
-* Line 11 of main.py `base_name = '{test_base_dir}'` means the directory `static/data/{test_base_dir}`.
-* Line 12 of main.py `item_cnt = 4` means 4 directories(`testA`, `testB`, `testC`, `testD`) of images for comparing.
-* Line 13 of main.py `display_size = 128` means image display size is 128x128.
-* The directory of input image `static/data/{test_base_dir}/origin` can be not existed.
-
+* --data_base_dir(string): base data directory
+* --item_cnt(int): num of test directories(testA, testB, ...)
+* --display_size(int): display size of each image
+* --better_rule(string): choose rules
+* --run_ip(string): running ip address
+* --run_port(int): running port
+* --random_place(bool): random place the images from different directories?
+* --navigator_cnt(int): navigator address count
+* --navigator_start_port(int): navigator start port
+* The directory of input image {data_base_dir}/origin can be not existed.
+    
 ### Start Website
 ```
-python main.py
+bash run.sh
+```
+
+### Stop Website
+```
+bash kill_all.sh
 ```
 
 ### Statistic
