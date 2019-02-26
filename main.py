@@ -19,6 +19,8 @@ def get_args():
     parser.add_argument("--run_ip", type=str, default="127.0.0.1", help="running ip address")
     parser.add_argument("--run_port", type=int, default=5000, help="running port")
     parser.add_argument('--random_place', action='store_true', help='random place the images from different directories?')
+    parser.add_argument('--navigator_cnt', type=int, default=1, help='navigator address count')
+    parser.add_argument('--navigator_start_port', type=int, default=0, help='navigator start port')
     args = parser.parse_args()
     return args
 
@@ -119,6 +121,16 @@ def do_msg_init():
     info['input_img_paths'] = input_img_paths
     info['result_img_pathss'] = result_img_pathss
     info['better_rule'] = args.better_rule
+    
+    if args.navigator_start_port == 0:
+        args.navigator_start_port = args.run_port
+
+    assert(args.run_port >= args.navigator_start_port)
+    assert(args.run_port < args.navigator_start_port + args.navigator_cnt)
+
+    info['navigator_cur_ind'] = args.run_port - args.navigator_start_port
+    info['navigator_commands'] = ["Part-{}".format(x+1) for x in range(args.navigator_cnt)]
+    info['navigator_links'] = ["http://{}:{}".format(args.run_ip, args.navigator_start_port+x) for x in range(args.navigator_cnt)]
     return json.dumps(info)
 
 @app.route('/submit/<label_result>')

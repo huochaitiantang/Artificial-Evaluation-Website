@@ -9,6 +9,13 @@ $(document).ready(function(){
             (res) => {
                 ans = JSON.parse(res)
                 console.log(ans)
+
+                var nav_cur_ind = ans['navigator_cur_ind']
+                var nav_cmds = ans['navigator_commands']
+                var nav_lnks = ans['navigator_links']
+
+                display_navs(nav_cur_ind, nav_cmds, nav_lnks)
+
                 var input_img_paths = ans['input_img_paths']
                 var result_img_pathss = ans['result_img_pathss']
                 var display_size = ans['display_size']
@@ -36,6 +43,19 @@ $(document).ready(function(){
             request.send()
         })
         return p
+    }
+
+    // display the navigators
+    function display_navs(cur_ind, commands, links){
+        for(var i = 0; i < commands.length; i++){
+            if(cur_ind != i){
+                var node_string = "<li style='font-size:18px;margin-top:5px;margin-bottom:5px;'><a href='" + links[i] + "' style='text-decoration:none;'>" + commands[i] + "</a></li>"
+            }
+            else{
+                var node_string = "<li style='background:#7CFC00;font-size:20px;margin-top:5px;margin-bottom:5px;'><a href='" + links[i] + "' style='text-decoration:none;'>" + commands[i] + "</a></li>"
+            }
+            $('#navigator').append(node_string)
+        }
     }
 
     // display all imgs items
@@ -142,6 +162,8 @@ $(document).ready(function(){
             }
             else{
                 $("#submit_info").html("提交错误：第" + (i + 1) + "张图片还未评价！")
+                // scroll to the not eval
+                $("html,body").animate({scrollTop:$("#image_" + i + "_0").offset().top}, 500)
                 return ""
             }
         }
