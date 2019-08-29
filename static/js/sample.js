@@ -1,17 +1,18 @@
 $(document).ready(function(){
-
-    init_display()
+    var pathname = window.location.pathname
+    var sample_id = pathname.substring(1)
+    init_display(sample_id)
 
     // get image paths infomation
-    function init_display(){
-        var p = get_promise('/msg_init')
+    function init_display(sample_id){
+        var p = get_promise('/msg_init/' + sample_id)
         p.then(
             (res) => {
                 ans = JSON.parse(res)
                 console.log(ans)
 
                 var display_size = ans['display_size']
-                var better_rule = ans['better_rule]
+                var better_rule = ans['better_rule']
                 var sample_id = ans['sample_id']
                 var sample_cnt = ans['sample_cnt']
                 var frame_paths = ans['frame_paths']

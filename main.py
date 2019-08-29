@@ -41,11 +41,9 @@ emotion_names = ["_", "Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise"]
 vid_ids, img_ids, classes = get_samples()
 print(vid_ids, img_ids, classes)
 
-sample_id = 1
 sample_cnt = len(vid_ids)
 
-def get_paths():
-    global sample_id
+def get_paths(sample_id):
     vid_id = vid_ids[sample_id - 1]
     img_id = img_ids[sample_id - 1]
     cls = classes[sample_id - 1]
@@ -64,24 +62,21 @@ def do_home():
     return flask.render_template('home.html')
 
 
-@app.route('/<int:smp_id>')
-def do_sample(smp_id):
-    global sample_id
-    sample_id = smp_id
-    sample_id = min(sample_id, sample_cnt)
-    sample_id = max(sample_id, 1)
+@app.route('/<int:sample_id>')
+def do_sample(sample_id):
     return flask.render_template('sample.html')
 
 
-@app.route('/msg_init')
-def do_msg_init():
-    global sample_id
-    frame_paths, face_paths, cls = get_paths()
+@app.route('/msg_init/<int:sample_id>')
+def do_msg_init(sample_id):
+
+    sample_id = max(min(sample_cnt, sample_id), 1)
+    frame_paths, face_paths, cls = get_paths(sample_id)
     info = {}
     info['display_size'] = args.display_size
     info['better_rule'] = args.better_rule
-    info['sample_id'] = sample_id
     info['sample_cnt'] = sample_cnt
+    info['sample_id'] = sample_id
     info['frame_paths'] = frame_paths
     info['face_paths'] = face_paths
     info['emotion'] = emotion_names[cls]
