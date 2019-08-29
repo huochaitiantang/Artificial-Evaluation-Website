@@ -10,6 +10,16 @@ $(document).ready(function(){
                 ans = JSON.parse(res)
                 console.log(ans)
 
+                var display_size = ans['display_size']
+                var better_rule = ans['better_rule]
+                var sample_id = ans['sample_id']
+                var sample_cnt = ans['sample_cnt']
+                var frame_paths = ans['frame_paths']
+                var face_paths = ans['face_paths']
+
+                $("#speed").html("进度：" + sample_id + "/" + sample_cnt)
+                
+                /*
                 var nav_cur_ind = ans['navigator_cur_ind']
                 var nav_cmds = ans['navigator_commands']
                 var nav_lnks = ans['navigator_links']
@@ -28,6 +38,7 @@ $(document).ready(function(){
                 $("#submit_button").click(function(){
                     submit_label(img_cnt, item_cnt)
                 })
+                */
             }
         )
     }

@@ -12,125 +12,80 @@ app = Flask("Turing")
 def get_args():
     # base setting
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_base_dir", type=str, default="static/data/test", help="base data directory")
-    parser.add_argument("--item_cnt", type=int, default=4, help="num of test directories(testA, testB, ...)")
+    parser.add_argument("--data_base_dir", type=str, default="static/data/fer", help="base data directory")
     parser.add_argument("--display_size", type=int, default=128, help="display size of each image")
     parser.add_argument("--better_rule", type=str, default="此处为选取规则", help="choose rules")
     parser.add_argument("--run_ip", type=str, default="127.0.0.1", help="running ip address")
     parser.add_argument("--run_port", type=int, default=5000, help="running port")
-    parser.add_argument('--random_place', action='store_true', help='random place the images from different directories?')
     parser.add_argument('--navigator_cnt', type=int, default=1, help='navigator address count')
     parser.add_argument('--navigator_start_port', type=int, default=0, help='navigator start port')
     args = parser.parse_args()
     return args
 
 args = get_args()
-# directory infomation
-input_dir = os.path.join(args.data_base_dir, "origin")
-if not os.path.exists(input_dir):
-    input_dir = None
 
-result_dirs = []
-for i in range(args.item_cnt):
-    cur_dir = "test{}".format(chr(65 + i))
-    test_path = os.path.join(args.data_base_dir, cur_dir)
-    assert(os.path.exists(test_path))
-    result_dirs.append(test_path)
+def get_samples():
+    vid_ids = []
+    img_ids = []
+    classes = []
+    fin = open(os.path.join(args.data_base_dir, "tmp_key_frame.txt"))
+    for line in fin.readlines():
+        items = line.split(' ')
+        vid_ids.append(items[0])
+        classes.append(int(items[1]))
+        img_ids.append(["{0:04d}.jpg".format(int(items[x])) for x in range(2, len(items))])
+    fin.close()
+    return vid_ids, img_ids, classes
 
-test_list_name = os.path.join(args.data_base_dir, 'test_list.txt')
-args.display_size = min(1024/(args.item_cnt + 1), args.display_size)
+emotion_names = ["_", "Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise"]
+vid_ids, img_ids, classes = get_samples()
+print(vid_ids, img_ids, classes)
 
-# initial test list
-def init_test_list(test_list_name, result_dirs, input_dir=None):
+sample_id = 1
+sample_cnt = len(vid_ids)
 
-    if not os.path.exists(test_list_name):
+def get_paths():
+    global sample_id
+    vid_id = vid_ids[sample_id - 1]
+    img_id = img_ids[sample_id - 1]
+    cls = classes[sample_id - 1]
+    frame_dir = os.path.join(args.data_base_dir, "key_frames")
+    face_dir = os.path.join(args.data_base_dir, "key_faces")
 
-        result_dir_len = len(result_dirs)
-        assert(result_dir_len > 0)
+    frame_paths = [os.path.join(frame_dir, x) for x in img_id]
+    face_paths = [os.path.join(face_dir, x) for x in img_id]
 
-        img_ids = os.listdir(result_dirs[0])
-        img_ids.sort()
-        assert(len(img_ids) > 0)
+    return frame_paths, face_paths, cls
 
-        for img_id in img_ids:
-            for i in range(result_dir_len):
-                cur_path = os.path.join(result_dirs[i], img_id)
-                assert(os.path.exists(cur_path))
-
-            if input_dir is not None:
-                cur_path = os.path.join(input_dir, img_id)
-                assert(os.path.exists(cur_path))
-
-        with open(test_list_name, 'w') as f:
-            img_id_inds = range(result_dir_len)
-
-            for img_id in img_ids:
-                if args.random_place:
-                    random.shuffle(img_id_inds)
-                for i in range(result_dir_len):
-                    f.write("{} ".format(img_id_inds[i]))
-                f.write("\n")
-
-
-# resolve from the test list, return img path
-def resolve_test_list(test_list_name, result_dirs, input_dir=None):
-    assert(os.path.exists(test_list_name))
-    with open(test_list_name, 'r') as f:
-
-        result_img_pathss = []
-        input_img_paths = []
-
-        img_ids = os.listdir(result_dirs[0])
-        img_ids.sort()
-
-        lines = f.readlines()
-        line_len = len(lines)
-
-        for i in range(line_len):
-            result_img_paths = []
-            img_id = img_ids[i]
-            img_inds = lines[i].strip().split() 
-
-            for img_ind in img_inds:
-                img_ind = int(img_ind)
-                cur_path = os.path.join(result_dirs[img_ind], img_id)
-                result_img_paths.append(cur_path)
-            result_img_pathss.append(result_img_paths)
-
-            if input_dir is not None:
-                cur_path = os.path.join(input_dir, img_id)
-                input_img_paths.append(cur_path)
-
-        if input_dir is None:
-            input_img_paths = None
-        return input_img_paths, result_img_pathss
-
-
-init_test_list(test_list_name, result_dirs, input_dir)
-input_img_paths, result_img_pathss = resolve_test_list(test_list_name, result_dirs, input_dir)
 
 
 @app.route('/')
 def do_home():
     return flask.render_template('home.html')
 
+
+@app.route('/<int:smp_id>')
+def do_sample(smp_id):
+    global sample_id
+    sample_id = smp_id
+    sample_id = min(sample_id, sample_cnt)
+    sample_id = max(sample_id, 1)
+    return flask.render_template('sample.html')
+
+
 @app.route('/msg_init')
 def do_msg_init():
+    global sample_id
+    frame_paths, face_paths, cls = get_paths()
     info = {}
     info['display_size'] = args.display_size
-    info['input_img_paths'] = input_img_paths
-    info['result_img_pathss'] = result_img_pathss
     info['better_rule'] = args.better_rule
+    info['sample_id'] = sample_id
+    info['sample_cnt'] = sample_cnt
+    info['frame_paths'] = frame_paths
+    info['face_paths'] = face_paths
+    info['emotion'] = emotion_names[cls]
     
-    if args.navigator_start_port == 0:
-        args.navigator_start_port = args.run_port
-
-    assert(args.run_port >= args.navigator_start_port)
-    assert(args.run_port < args.navigator_start_port + args.navigator_cnt)
-
-    info['navigator_cur_ind'] = args.run_port - args.navigator_start_port
-    info['navigator_commands'] = ["Part-{}".format(x+1) for x in range(args.navigator_cnt)]
-    info['navigator_links'] = ["http://{}:{}".format(args.run_ip, args.navigator_start_port+x) for x in range(args.navigator_cnt)]
     return json.dumps(info)
 
 @app.route('/submit/<label_result>')

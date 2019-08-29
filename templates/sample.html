@@ -3,14 +3,17 @@
     <head>
         <meta charset='utf-8'>
         <script src = "/static/js/jquery-3.2.1.min.js"></script>
+        <script src = "/static/js/sample.js"></script>
     </head>
 
     <body>
         <div style="text-align:center;">
             <div style="text-align:center;padding:10px;display:inline-block;">
 
+                <div id='speed' style="font-size:25px;"></div>
+
                 <div style="padding:15px;text-align:center;font-size:30px;">
-                  	标注注意事项
+                  	请从下列字母选项中选择你认为最好的图片结果
                 </div>
                 
                 <div id='better_rule' style="padding:10px;text-align:center;font-size:18px;color:red;">
@@ -21,7 +24,12 @@
                 </div>
 
                 <div id="content_div" style="text-align:center;">    
-	            </div>		
+	        </div>		
+
+                <div id='submit_info'></div>
+	        <div style='margin:10px;'>你的姓名：<input id="info_input" type="text" value=""></div>
+                <div style='margin:10px;'><button id="submit_button">提交结果</button></div>
+
             </div>
         </div>
 
