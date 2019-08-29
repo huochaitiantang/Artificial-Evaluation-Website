@@ -49,8 +49,8 @@ def get_paths():
     vid_id = vid_ids[sample_id - 1]
     img_id = img_ids[sample_id - 1]
     cls = classes[sample_id - 1]
-    frame_dir = os.path.join(args.data_base_dir, "key_frames")
-    face_dir = os.path.join(args.data_base_dir, "key_faces")
+    frame_dir = os.path.join(args.data_base_dir, "key_frames/{}".format(vid_id))
+    face_dir = os.path.join(args.data_base_dir, "key_faces/{}".format(vid_id))
 
     frame_paths = [os.path.join(frame_dir, x) for x in img_id]
     face_paths = [os.path.join(face_dir, x) for x in img_id]
