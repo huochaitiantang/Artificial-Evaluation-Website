@@ -3,6 +3,19 @@ $(document).ready(function(){
     var sample_id = pathname.substring(1)
     init_display(sample_id)
 
+    // generate a promise object
+    function get_promise(url){
+        var p = new Promise(function(resolve, reject){
+            var request = new XMLHttpRequest()
+            request.open('GET', url, true)
+            request.addEventListener("load", function(){
+                resolve(this.responseText)
+            })
+            request.send()
+        })
+        return p
+    }
+
     // get image paths infomation
     function init_display(sample_id){
         var p = get_promise('/msg_init/' + sample_id)
@@ -17,24 +30,14 @@ $(document).ready(function(){
                 var sample_cnt = ans['sample_cnt']
                 var frame_paths = ans['frame_paths']
                 var face_paths = ans['face_paths']
+                var frame_cnt = frame_paths.length
 
                 $("#speed").html("进度：" + sample_id + "/" + sample_cnt)
+                $("#better_rule").html(better_rule)
+                display_sample(frame_paths, face_paths, frame_cnt, display_size)
                 
+
                 /*
-                var nav_cur_ind = ans['navigator_cur_ind']
-                var nav_cmds = ans['navigator_commands']
-                var nav_lnks = ans['navigator_links']
-
-                display_navs(nav_cur_ind, nav_cmds, nav_lnks)
-
-                var input_img_paths = ans['input_img_paths']
-                var result_img_pathss = ans['result_img_pathss']
-                var display_size = ans['display_size']
-                var better_rule = ans['better_rule']
-                var img_cnt = result_img_pathss.length
-                var item_cnt = result_img_pathss[0].length
-
-                display_imgs(input_img_paths, result_img_pathss, img_cnt, item_cnt, display_size, better_rule)
 
                 $("#submit_button").click(function(){
                     submit_label(img_cnt, item_cnt)
@@ -44,83 +47,95 @@ $(document).ready(function(){
         )
     }
 
-    // generate a promise object
-    function get_promise(url){
-        var p = new Promise(function(resolve, reject){
-            var request = new XMLHttpRequest()
-            request.open('GET', url, true)
-            request.addEventListener("load", function(){
-                resolve(this.responseText)
+    // Firefox, Google Chrome, Opera, Safari, Internet Explorer from version 9
+    function OnInput (event) {
+        //$('#demo').html(event.target.value);
+        alert ("The new content: " + event.target.value);
+    }
+    // Internet Explorer
+    function OnPropChanged (event) {
+        if (event.propertyName.toLowerCase () == "value") {
+            alert ("The new content: " + event.srcElement.value);
+        }
+    }
+
+
+
+    // display a sample with all frames and faces
+    function display_sample(frame_paths, face_paths, frame_cnt, display_size){
+        for(var i = 0; i < frame_cnt; i++){
+            $("#content_div").append(display_one_line(frame_paths[i], face_paths[i], i, display_size))
+
+            // range input event
+            $("#range_" + i).bind('input propertychange', function(){
+                var instensity = $(this).val()
+                $(this).parent().next().children().first().next().html(instensity)
+                console.log($(this).parent().next().children().first().next().attr('id'))
+                console.log("instensity:" + instensity)
             })
-            request.send()
-        })
-        return p
+
+            // sub button click
+            $("#button_sub_" + i).click(function(){
+                var instensity = parseInt($(this).parent().prev().children().first().val())
+                if(instensity > 0){
+                    instensity -= 1
+                }
+                $(this).parent().prev().children().first().val(instensity)
+                $(this).next().html(instensity)
+                console.log($(this).next().attr('id'))
+                console.log("instensity:" + instensity)
+            })
+
+            // add button click
+            $("#button_add_" + i).click(function(){
+                var instensity = parseInt($(this).parent().prev().children().first().val())
+                if(instensity < 100){
+                    instensity += 1
+                }
+                $(this).parent().prev().children().first().val(instensity)
+                $(this).prev().html(instensity)
+                console.log($(this).prev().attr('id'))
+                console.log("instensity:" + instensity)
+            })
+
+        }
+        // bind the input event after display the input element!!!
+
     }
 
-    // display the navigators
-    function display_navs(cur_ind, commands, links){
-        for(var i = 0; i < commands.length; i++){
-            if(cur_ind != i){
-                var node_string = "<li style='font-size:18px;margin-top:5px;margin-bottom:5px;'><a href='" + links[i] + "' style='text-decoration:none;'>" + commands[i] + "</a></li>"
-            }
-            else{
-                var node_string = "<li style='background:#7CFC00;font-size:20px;margin-top:5px;margin-bottom:5px;'><a href='" + links[i] + "' style='text-decoration:none;'>" + commands[i] + "</a></li>"
-            }
-            $('#navigator').append(node_string)
-        }
-    }
+    // display one line
+    function display_one_line(frame_path, face_path, frame_ind, display_size){
+        // frame order
+        var node_string = "<div style='padding:10px;'><div style='display:inline-block;vertical-align:top;margin-right:10px;font-size:25px;font-style:italic;'>#" + format_number(frame_ind + 1) + "</div>"
+        
+        // face img 1/2
+        node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'><img src='/" + face_path + "' width='" + display_size + "px' height='" + display_size + "px'></div>"
 
-    // display all imgs items
-    function display_imgs(input_img_paths, result_img_pathss, img_cnt, item_cnt, display_size, better_rule){
-        // column infomation div
-        $("#better_rule").html(better_rule)
-        var column_info  = "#序号"
-        if(input_img_paths != null){
-            column_info += " | 原始图片"
-        }
-        for(var i = 0; i < item_cnt; i++){
-            column_info += " | 结果图片" + String.fromCharCode(i + 65)
-        }
-        $("#column_info").html(column_info)
+        // frame img
+        node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'><img src='/" + frame_path + "' width='" + display_size + "px' height='" + display_size + "px'></div>"
 
-        // display images item one by one
-        for(var i = 0; i < img_cnt; i++){
-            $("#content_div").append(generate_img_item(input_img_paths, result_img_pathss, i, display_size))
-
-            // set the each image onclick event
-            for(var j = 0; j < item_cnt; j++){
-                $('#image_' + i + '_' + j).click(function(){
-                    console.log($(this).parent().next().children().children().attr('id'))
-                    // remove other all radio checked attribute
-                    $(this).parent().parent().siblings().children().children().children().removeAttr('checked');
-                    $(this).parent().next().children().children().attr('checked', 'true')
-                })
-            }
-        }
-    }
-
-    // one line img item
-    function generate_img_item(input_img_paths, result_img_pathss, img_ind, display_size){
-        var node_string = "<div style='padding:10px;'><div style='display:inline-block;vertical-align:top;margin-right:10px;font-size:25px;font-style:italic;'>#" + format_number(img_ind + 1) + "</div>"
-        if(input_img_paths != null){
-            node_string += "<div style='display:inline-block;vertical-align:top;imargin-right:10px;'><img src='/" + input_img_paths[img_ind] + "' width='" + display_size + "px' height='" + display_size + "px'></div>"
-        }
-        for(var i = 0; i < result_img_pathss[img_ind].length; i++){
-            node_string += generate_img_radio(result_img_pathss, img_ind, i, display_size)
-        }
-        node_string += "</div>"
+        // input range from 0-100
+        range_id = "range_" + frame_ind
+        range_text = "range_text_" + frame_ind
+        button_sub = "button_sub_" + frame_ind
+        button_add = "button_add_" + frame_ind
+        node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'><div style='display:inline-block;vertical-align:top;'>0</div>"
+        node_string += "<div style='display:inline-block;vertical-align:top;'><div><input id='" + range_id + "' type='range'></div>"
+        node_string += " <div style='font-size:18px;'><button id='" + button_sub + "' style='display:inline-block;vertical-align:top;margin:5px'>-</button><div id='" + range_text + "' style='display:inline-block;vertical-align:top;margin:5px;'>50</div><button id='" + button_add + "' style='display:inline-block;vertical-align:top;margin:5px'>+</button>"
+        node_string += "</div></div> <div style='display:inline-block;vertical-align:top;'>100</div> <div>"
+        
         return node_string
     }
 
     function format_number(num){
-        var bit_max = 3
+        var bit_max = 2
         var res = ''+num
         var bit_sub = bit_max - res.length
         while(bit_sub > 0){
             res = '0' + res
             bit_sub -= 1
-	}
-	return res
+	    }
+	    return res
     }
 
     // generate a img with radio
