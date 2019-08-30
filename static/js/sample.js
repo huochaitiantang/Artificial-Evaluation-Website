@@ -55,9 +55,45 @@ $(document).ready(function(){
                         window.location.href = "/" + sample_id + "?usr_name=" + usr_name 
                     }
                 })
-
+                draw_canvas(frame_cnt, display_size)
             }
         )
+    }
+
+    function draw_canvas(frame_cnt, display_size){
+        var canvas = document.getElementById('canvas')
+        canvas.width = 200
+        canvas.height = 400
+        
+        var ctx = canvas.getContext('2d')
+        var y_step = canvas.height / frame_cnt
+
+        // draw point
+        ctx.fillStyle="#FF0000"
+        for(var i = 0; i < frame_cnt; i++){
+            var intensity = $("#range_" + i).val()
+            var y = y_step * (i + 0.5)
+            var x = intensity * 2
+            ctx.beginPath()
+            ctx.arc(x, y, 3, 0, 2*Math.PI)
+            ctx.closePath()
+            ctx.fill()
+        }
+
+        // draw line
+        ctx.beginPath()
+        ctx.strokeStyle="#0000FF"
+        for(var i = frame_cnt - 2; i >= 0; i--){
+            var intensity = $("#range_" + i).val()
+            var y0 = y_step * (i + 0.5)
+            var x0 = intensity * 2
+            ctx.moveTo(x, y)
+            ctx.lineTo(x0, y0)
+            ctx.stroke()
+            x = x0
+            y = y0
+        }
+        ctx.closePath()
     }
 
     // display a sample with all frames and faces
@@ -72,6 +108,7 @@ $(document).ready(function(){
                 $(this).parent().parent().next().children().first().next().html(intensity)
                 console.log($(this).parent().parent().next().children().first().next().attr('id'))
                 console.log("intensity:" + intensity)
+                draw_canvas(frame_cnt, display_size)
             })
 
             // sub button click
@@ -84,6 +121,7 @@ $(document).ready(function(){
                 $(this).next().html(intensity)
                 console.log($(this).next().attr('id'))
                 console.log("intensity:" + intensity)
+                draw_canvas(frame_cnt, display_size)
             })
 
             // add button click
@@ -96,6 +134,7 @@ $(document).ready(function(){
                 $(this).prev().html(intensity)
                 console.log($(this).prev().attr('id'))
                 console.log("intensity:" + intensity)
+                draw_canvas(frame_cnt, display_size)
             })
         }
     }

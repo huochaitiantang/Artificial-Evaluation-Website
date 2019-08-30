@@ -26,7 +26,7 @@ def get_samples():
     vid_ids = []
     img_ids = []
     classes = []
-    fin = open(os.path.join(args.data_base_dir, "tmp_key_frame.txt"))
+    fin = open(os.path.join(args.data_base_dir, "key_frame.txt"))
     for line in fin.readlines():
         items = line.split(' ')
         vid_ids.append(items[0])
