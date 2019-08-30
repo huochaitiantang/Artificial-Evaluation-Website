@@ -39,6 +39,23 @@ $(document).ready(function(){
                 $("#submit_button").click(function(){
                     submit_label(sample_id, frame_cnt, sample_cnt)
                 })
+
+                $("#prev_sample").click(function(){
+                    if(sample_id > 1){
+                        sample_id -= 1
+                        var usr_name = $("#info_input").val().replace(/\s*/g,"")
+                        window.location.href = "/" + sample_id + "?usr_name=" + usr_name 
+                    }
+                })
+                
+                $("#next_sample").click(function(){
+                    if(sample_id < sample_cnt){
+                        sample_id += 1
+                        var usr_name = $("#info_input").val().replace(/\s*/g,"")
+                        window.location.href = "/" + sample_id + "?usr_name=" + usr_name 
+                    }
+                })
+
             }
         )
     }
@@ -52,18 +69,18 @@ $(document).ready(function(){
             // range input event
             $("#range_" + i).bind('input propertychange', function(){
                 var intensity = $(this).val()
-                $(this).parent().next().children().first().next().html(intensity)
-                console.log($(this).parent().next().children().first().next().attr('id'))
+                $(this).parent().parent().next().children().first().next().html(intensity)
+                console.log($(this).parent().parent().next().children().first().next().attr('id'))
                 console.log("intensity:" + intensity)
             })
 
             // sub button click
             $("#button_sub_" + i).click(function(){
-                var intensity = parseInt($(this).parent().prev().children().first().val())
+                var intensity = parseInt($(this).parent().prev().children().first().next().children().first().val())
                 if(intensity > 0){
                     intensity -= 1
                 }
-                $(this).parent().prev().children().first().val(intensity)
+                $(this).parent().prev().children().first().next().children().first().val(intensity)
                 $(this).next().html(intensity)
                 console.log($(this).next().attr('id'))
                 console.log("intensity:" + intensity)
@@ -71,11 +88,11 @@ $(document).ready(function(){
 
             // add button click
             $("#button_add_" + i).click(function(){
-                var intensity = parseInt($(this).parent().prev().children().first().val())
+                var intensity = parseInt($(this).parent().prev().children().first().next().children().first().val())
                 if(intensity < 100){
                     intensity += 1
                 }
-                $(this).parent().prev().children().first().val(intensity)
+                $(this).parent().prev().children().first().next().children().first().val(intensity)
                 $(this).prev().html(intensity)
                 console.log($(this).prev().attr('id'))
                 console.log("intensity:" + intensity)
@@ -86,23 +103,31 @@ $(document).ready(function(){
     // display one line
     function display_one_line(frame_path, face_path, frame_ind, display_size){
         // frame order
-        var node_string = "<div style='padding:10px;'><div style='display:inline-block;vertical-align:top;margin-right:10px;font-size:25px;font-style:italic;'>#" + format_number(frame_ind + 1) + "</div>"
+        var node_string = "<div style='padding:10px;'><div style='display:inline-block;vertical-align:top;margin-right:10px;font-size:20px;font-style:italic;'>#" + format_number(frame_ind + 1) + "</div>"
         
-        // face img 1/2
-        node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'><img src='/" + face_path + "' width='" + display_size + "px' height='" + display_size + "px'></div>"
-
         // frame img
-        node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'><img src='/" + frame_path + "' width='" + display_size + "px' height='" + display_size + "px'></div>"
+        node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'><img src='/" + frame_path + "' height='" + display_size + "px'></div>"
 
         // input range from 0-100
         range_id = "range_" + frame_ind
         range_text = "range_text_" + frame_ind
         button_sub = "button_sub_" + frame_ind
         button_add = "button_add_" + frame_ind
-        node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'><div style='display:inline-block;vertical-align:top;'>0</div>"
-        node_string += "<div style='display:inline-block;vertical-align:top;'><div><input id='" + range_id + "' type='range'></div>"
-        node_string += " <div style='font-size:18px;'><button id='" + button_sub + "' style='display:inline-block;vertical-align:top;margin:5px'>-</button><div id='" + range_text + "' style='display:inline-block;vertical-align:top;margin:5px;'>50</div><button id='" + button_add + "' style='display:inline-block;vertical-align:top;margin:5px'>+</button>"
-        node_string += "</div></div> <div style='display:inline-block;vertical-align:top;'>100</div> <div>"
+
+        node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'>" 
+        // face img line
+        node_string += "<div><img src='/" + face_path + "' width='" + (display_size / 2) + "px' height='128px'></div>"
+        
+        // range line
+        node_string += "<div style='margin-top:20px;'><div style='display:inline-block;vertical-align:top;'>0</div>"
+        node_string += "<div style='display:inline-block;vertical-align:top;'><input id='" + range_id + "' type='range'></div>"
+        node_string += "<div style='display:inline-block;vertical-align:top;'>100</div></div>"
+
+        // button line
+        node_string += " <div style='font-size:18px;margin-top:5px;'><button id='" + button_sub + "' style='display:inline-block;vertical-align:top;margin:5px'>-</button>"
+        node_string += "<div id='" + range_text + "' style='display:inline-block;vertical-align:top;margin:5px;'>50</div>"
+        node_string += "<button id='" + button_add + "' style='display:inline-block;vertical-align:top;margin:5px'>+</button></div>"
+        node_string += "</div>"
         
         return node_string
     }

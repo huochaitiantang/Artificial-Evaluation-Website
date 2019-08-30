@@ -13,8 +13,6 @@ def get_args():
     # base setting
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_base_dir", type=str, default="static/data/fer", help="base data directory")
-    parser.add_argument("--display_size", type=int, default=128, help="display size of each image")
-    parser.add_argument("--better_rule", type=str, default="此处为选取规则", help="choose rules")
     parser.add_argument("--run_ip", type=str, default="127.0.0.1", help="running ip address")
     parser.add_argument("--run_port", type=int, default=5000, help="running port")
     parser.add_argument('--navigator_cnt', type=int, default=1, help='navigator address count')
@@ -37,7 +35,8 @@ def get_samples():
     fin.close()
     return vid_ids, img_ids, classes
 
-emotion_names = ["_", "Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise"]
+#emotion_names = ["_", "Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise"]
+emotion_names = ["_", "生气，气愤，愤怒", "讨厌，厌恶，不喜欢，不高兴", "恐惧，害怕", "开心，高兴", "悲伤，伤心", "惊喜，惊奇，惊讶"]
 vid_ids, img_ids, classes = get_samples()
 print(vid_ids, img_ids, classes)
 
@@ -73,20 +72,18 @@ def do_sample(sample_id):
         usr_name = ""
     return flask.render_template('sample.html', usr_name=usr_name)
 
-
 @app.route('/msg_init/<int:sample_id>')
 def do_msg_init(sample_id):
 
     sample_id = max(min(sample_cnt, sample_id), 1)
     frame_paths, face_paths, cls = get_paths(sample_id)
     info = {}
-    info['display_size'] = args.display_size
-    info['better_rule'] = args.better_rule
+    info['display_size'] = 256
+    info['better_rule'] = emotion_names[cls] # emotion
     info['sample_cnt'] = sample_cnt
     info['sample_id'] = sample_id
     info['frame_paths'] = frame_paths
     info['face_paths'] = face_paths
-    info['emotion'] = emotion_names[cls]
     
     return json.dumps(info)
 
