@@ -43,6 +43,10 @@ print(vid_ids, img_ids, classes)
 
 sample_cnt = len(vid_ids)
 
+save_dir = os.path.join(args.data_base_dir, "label")
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
+
 def get_paths(sample_id):
     vid_id = vid_ids[sample_id - 1]
     img_id = img_ids[sample_id - 1]
@@ -64,7 +68,10 @@ def do_home():
 
 @app.route('/<int:sample_id>')
 def do_sample(sample_id):
-    return flask.render_template('sample.html')
+    usr_name = flask.request.args.get('usr_name')
+    if usr_name is None:
+        usr_name = ""
+    return flask.render_template('sample.html', usr_name=usr_name)
 
 
 @app.route('/msg_init/<int:sample_id>')
@@ -83,27 +90,35 @@ def do_msg_init(sample_id):
     
     return json.dumps(info)
 
-@app.route('/submit/<label_result>')
-def do_submit(label_result): 
+@app.route('/submit/<int:sample_id>/<label_result>')
+def do_submit(sample_id, label_result): 
     info = {}
     info['status'] = 0
 
-    labels = label_result.encode('utf-8').split()
-    if len(labels) != len(result_img_pathss) + 1:
+    if sample_id < 1 or sample_id > sample_cnt:
         return json.dumps(info)
+    
+    frame_cnt = len(img_ids[sample_id - 1])
+    vid_id = vid_ids[sample_id - 1]
 
+    labels = label_result.encode('utf-8').split()
+    if len(labels) != frame_cnt + 1:
+        return json.dumps(info)
     usr_name = labels.pop()
     print(labels, usr_name)
 
+    # save file
     time_str = str(time.time()).replace('.', '_')
-    file_name = os.path.join(args.data_base_dir, "{}_{}.txt".format(time_str, usr_name))
+    file_name = os.path.join(args.data_base_dir, "label/{}-{}-{}.txt".format(usr_name, vid_id, time_str))
 
+    # write to the file
     with open(file_name, 'w') as f:
+        f.write("{}".format(vid_id))
         for label in labels:
-            if int(label) < 0 or int(label) >= len(result_img_pathss[0]):
+            if int(label) < 0 or int(label) > 100:
                 return json.dumps(info)
-            f.write("{}\n".format(label))
-
+            f.write(" {}".format(label))
+    
     info['status'] = 1
     return json.dumps(info)
 

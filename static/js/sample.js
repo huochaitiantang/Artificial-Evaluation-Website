@@ -36,13 +36,9 @@ $(document).ready(function(){
                 $("#better_rule").html(better_rule)
                 display_sample(frame_paths, face_paths, frame_cnt, display_size)
                 
-
-                /*
-
                 $("#submit_button").click(function(){
-                    submit_label(img_cnt, item_cnt)
+                    submit_label(sample_id, frame_cnt, sample_cnt)
                 })
-                */
             }
         )
     }
@@ -55,34 +51,34 @@ $(document).ready(function(){
             // bind the input event after display the input element!!!
             // range input event
             $("#range_" + i).bind('input propertychange', function(){
-                var instensity = $(this).val()
-                $(this).parent().next().children().first().next().html(instensity)
+                var intensity = $(this).val()
+                $(this).parent().next().children().first().next().html(intensity)
                 console.log($(this).parent().next().children().first().next().attr('id'))
-                console.log("instensity:" + instensity)
+                console.log("intensity:" + intensity)
             })
 
             // sub button click
             $("#button_sub_" + i).click(function(){
-                var instensity = parseInt($(this).parent().prev().children().first().val())
-                if(instensity > 0){
-                    instensity -= 1
+                var intensity = parseInt($(this).parent().prev().children().first().val())
+                if(intensity > 0){
+                    intensity -= 1
                 }
-                $(this).parent().prev().children().first().val(instensity)
-                $(this).next().html(instensity)
+                $(this).parent().prev().children().first().val(intensity)
+                $(this).next().html(intensity)
                 console.log($(this).next().attr('id'))
-                console.log("instensity:" + instensity)
+                console.log("intensity:" + intensity)
             })
 
             // add button click
             $("#button_add_" + i).click(function(){
-                var instensity = parseInt($(this).parent().prev().children().first().val())
-                if(instensity < 100){
-                    instensity += 1
+                var intensity = parseInt($(this).parent().prev().children().first().val())
+                if(intensity < 100){
+                    intensity += 1
                 }
-                $(this).parent().prev().children().first().val(instensity)
-                $(this).prev().html(instensity)
+                $(this).parent().prev().children().first().val(intensity)
+                $(this).prev().html(intensity)
                 console.log($(this).prev().attr('id'))
-                console.log("instensity:" + instensity)
+                console.log("intensity:" + intensity)
             })
         }
     }
@@ -122,36 +118,27 @@ $(document).ready(function(){
 	    return res
     }
 
-    // generate a img with radio
-    function generate_img_radio(result_img_pathss, img_ind, item_ind, display_size){
-        radio_name = "radio_" + img_ind
-        radio_id = "radio_" + img_ind + "_" + item_ind
-        image_id = "image_" + img_ind + "_" + item_ind
-
-        node_string = "<div style='display:inline-block;vertical-align:top;margin-left:3px;'>"
-        result_img_path = result_img_pathss[img_ind][item_ind]
-
-        node_string = node_string + "<div><img id='" + image_id + "' src='" + result_img_path + "' width='" + display_size + "px' height='" + display_size + "px'></div>"
-        node_string = node_string + "<div><label><input id='" + radio_id + "' name='" + radio_name + "' type='radio' value='" + item_ind + "'/>"+ String.fromCharCode(item_ind + 65) + "</label></div>"
-
-        node_string = node_string + "</div>"
-        return node_string
-    }
-
     // submit label result
-    function submit_label(img_cnt){
+    function submit_label(sample_id, frame_cnt, sample_cnt){
         $("#submit_info").empty()
         $("#submit_info").css({"color": "red"});
-        var check_values = check_label_values(img_cnt)
+        var check_values = check_label_values(frame_cnt)
         if(check_values != ""){
-            var p = get_promise('/submit/' + check_values)
+            var p = get_promise('/submit/' + sample_id + '/' + check_values)
             p.then(
                 (res) => {
                     ans = JSON.parse(res)
                     if(ans['status'] == 1){
-                        $("#submit_info").css({"color": "blue"});
-                        var info_input = $("#info_input").val().replace(/\s*/g,"")
-                        $("#submit_info").html("提交成功，感谢你的参与，" + info_input + "　！")
+                        var usr_name = $("#info_input").val().replace(/\s*/g,"")
+                        // jump to next smaple with the usr name
+                        if(sample_id < sample_cnt){
+                            sample_id += 1
+                            window.location.href = "/" + sample_id + "?usr_name=" + usr_name 
+                        }
+                        else{
+                            $("#submit_info").css({"color": "blue"});
+                            $("#submit_info").html("所有标注完成，谢谢您，" + usr_name + "　！")
+                        }
                     }
                     else{
                         $("#submit_info").html("提交失败，请按规则填写！")
@@ -162,27 +149,29 @@ $(document).ready(function(){
     }
 
     // check if all the radios of items is checked
-    function check_label_values(img_cnt){
+    function check_label_values(frame_cnt){
         var check_values = ""
-        for(var i = 0; i < img_cnt; i++){
-            var radio_name = "radio_" + i
-            var check_value = $("input:radio[name='radio_" + i + "']:checked").val()
-            console.log("img="+ (i + 1) + " label=" + check_value)
-            if(check_value != null){
-                check_values += check_value + " "
+        var no_change = true
+        for(var i = 0; i < frame_cnt; i++){
+            var intensity = $("#range_" + i).val()
+            if(intensity != 50){
+                no_change = false
             }
-            else{
-                $("#submit_info").html("提交错误：第" + (i + 1) + "张图片还未评价！")
-                // scroll to the not eval
-                $("html,body").animate({scrollTop:$("#image_" + i + "_0").offset().top}, 500)
-                return ""
-            }
+            check_values += intensity + " "
         }
+        
+        if(no_change == true){
+            $("#submit_info").html("提交错误:标注结果不能都是初始值50!")
+            return ""
+        }
+
+        //replace white char
         var info_input = $("#info_input").val().replace(/\s*/g,"")
         if(info_input == ""){
             $("#submit_info").html("提交错误：请输入有效的姓名以便我们知道你的参与！")
             return ""
         }
+
         check_values += info_input
         return check_values
     }
