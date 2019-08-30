@@ -47,25 +47,12 @@ $(document).ready(function(){
         )
     }
 
-    // Firefox, Google Chrome, Opera, Safari, Internet Explorer from version 9
-    function OnInput (event) {
-        //$('#demo').html(event.target.value);
-        alert ("The new content: " + event.target.value);
-    }
-    // Internet Explorer
-    function OnPropChanged (event) {
-        if (event.propertyName.toLowerCase () == "value") {
-            alert ("The new content: " + event.srcElement.value);
-        }
-    }
-
-
-
     // display a sample with all frames and faces
     function display_sample(frame_paths, face_paths, frame_cnt, display_size){
         for(var i = 0; i < frame_cnt; i++){
             $("#content_div").append(display_one_line(frame_paths[i], face_paths[i], i, display_size))
 
+            // bind the input event after display the input element!!!
             // range input event
             $("#range_" + i).bind('input propertychange', function(){
                 var instensity = $(this).val()
@@ -97,10 +84,7 @@ $(document).ready(function(){
                 console.log($(this).prev().attr('id'))
                 console.log("instensity:" + instensity)
             })
-
         }
-        // bind the input event after display the input element!!!
-
     }
 
     // display one line
