@@ -107,7 +107,7 @@ def do_submit(sample_id, label_result):
 
     # save file
     time_str = str(time.time()).replace('.', '_')
-    file_name = os.path.join(args.data_base_dir, "label/{}-{}-{}.txt".format(usr_name, vid_id, time_str))
+    file_name = os.path.join(args.data_base_dir, "label/{}-{:03d}-{}-{}.txt".format(usr_name, int(sample_id), vid_id, time_str))
 
     # write to the file
     with open(file_name, 'w') as f:
