@@ -62,7 +62,8 @@ def get_paths(sample_id):
 
 @app.route('/')
 def do_home():
-    return flask.render_template('home.html')
+    
+    return flask.render_template('home.html', sample_cnt=sample_cnt)
 
 
 @app.route('/<int:sample_id>')

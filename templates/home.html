@@ -6,24 +6,81 @@
     </head>
 
     <body>
-        <div style="text-align:center;">
-            <div style="text-align:center;padding:10px;display:inline-block;">
-
-                <div style="padding:15px;text-align:center;font-size:30px;">
-                  	标注注意事项
-                </div>
+        <div style="margin:20px;">
+            <div style="margin:10px;text-align:center;font-size:30px;">
+                标注事项说明
+            </div>
+            <div style="pdding:10px;font-size:20px;">
+                <h3>1. 标注内容</h3>
+                <p style="margin-left:20px;text-indent:2em;">
+                    为人脸视频样本标注<b>表情强度变化趋势</b>。每个样本已被标注了一个表情类别，每个样本最多被抽取了十帧图像，标注者依据表情类别，为每帧图像标注该表情的强度值（0-100）。
+                </p>
+                    
+                <p style="margin-left:20px;text-indent:2em;">
+                    标注的强度值无需太精确，只需要同一样本中，<b>连续帧图像之间的表情强度变化趋势</b>大致正确即可。由于表情强度数值的主观性较强，因而在此寻求实验室各位同学们的帮助，多人共同标注以消除一定的主观性。
+                </p>
                 
-                <div id='better_rule' style="padding:10px;text-align:center;font-size:18px;color:red;">
-                  	
-                </div>
+                <h3>2. 表情类别</h3>
+                <p style="margin-left:20px;text-indent:2em;">
+                    <ul>
+                        <li><b>Angry：</b> 生气，气愤，愤怒；（大吼大叫，双眼瞪大）</li>
+                        <li><b>Disgust：</b> 讨厌，厌恶，不喜欢，不高兴；（嫌弃，鄙夷，脸部皱在一起）</li>
+                        <li><b>Fear：</b> 恐惧，害怕；（哆嗦，发抖，冷汗，大呼救命）</li>
+                        <li><b>Happy：</b> 开心，高兴；（微笑，大笑，得意，嘴角上扬）</li>
+                        <li><b>Sad：</b> 悲伤，伤心；（哭泣，眼含泪水）</li>
+                        <li><b>Surprise：</b> 惊奇，惊讶，惊喜；（发出疑问，灵光乍现，猝不及防）</li>
+                    </ul>
+                </p>
+               
+                <h3>3. 标注工具</h3>
+                    <h5 style="margin-left:20px">3.1 网站首页地址</h5>
+                    <p style="margin-left:20px;text-indent:2em;">
+                    学校内网：<a href="http://219.224.168.84:7000">http://219.224.168.84:7000</a>，学校外网：<a href="http://118.27.39.244:7000">http://118.27.39.244:7000</a>，网站首页为标注说明页面（即本页面）。
+                    </p>
 
-                <div id="column_info" style="padding:15px;text-align:center;font-size:20px">
-                </div>
+                    <h5 style="margin-left:20px">3.2 网站标注地址</h5>
+                    <p style="margin-left:20px;text-indent:2em;">
+                        对于每个样本其标注地址为:<b>http://219.224.168.84:7000/sample_id</b>，sample_id为样本编号，是从1到{{sample_cnt}}的整数值；若是想要分多次标注，只需要记住上一次标注的最后一个样本序号x，新一次的标注只需将sample_id换成x+1即可。
+                    </p>
+                    <h5 style="margin-left:20px">3.3 浏览器</h5>
+                    <p style="margin-left:20px;text-indent:2em;">
+                        请尽量使用Chrome，Firefox，Edge浏览器，谢谢大家的配合！
+                    </p>
 
-                <div id="content_div" style="text-align:center;">    
-	            </div>		
+                    <h5 style="margin-left:20px">3.4 标注页面</h5>
+                    <p style="margin-left:20px;text-indent:2em;">
+                        每一个页面含有从样本中抽取出来的若干帧图像，图像旁有其对应的人脸图像，人脸图像下方是标注强度的区域，<b>点击滑块拖动</b>，即可标注对应的数值，数值两侧的加减号按钮可以对数值进行微调，增加或者减少1。
+                    </p>
+                        
+                    <h5 style="margin-left:20px">3.5 强度趋势预览</h5>
+                    <p style="margin-left:20px;text-indent:2em;">
+                        标注页面最右端显示的是，依据当前标注值，形成的表情强度趋势变化图。
+                    </p>
+
+                    <h5 style="margin-left:20px">3.6 标注提交</h5>
+                    <p style="margin-left:20px;text-indent:2em;">
+                        页面最下方有提交按钮，请填写标注人的姓名（只需填写一次，后续页面会自动填上），并点击提交，如果成功将会自动跳转至下一个样本的标注页面。
+                    </p>
+               
+               
+                <h3>4. 标注过程注意</h3>
+                <p style="margin-left:20px;text-indent:2em;">
+                   在标注一个样本时，大家最好能先浏览一遍该页面中，该样本对应的所有帧的图像，大致有了表情强度变化的印象之后，再去标注各个帧的强度数值。
+                </p>
+               
+                <h3>5. 时长预估</h3>
+                <p style="margin-left:20px;text-indent:2em;">
+                   每个样本大约20s，一共632个样本，大约会耽误每个同学2.5-3.5小时的时间，在这里提前跪谢实验室各位大佬啦！！！
+                </p>
+               
+                <h3>6. 其他</h3>
+                <p style="margin-left:20px;text-indent:2em;">
+                大家在标注过程中遇到任何问题都可以问我哈。
+                </p>
+
+                <a href="/1" target="_blank"><h3>7. 开始标注</h3></a>
+
             </div>
         </div>
-
     </body>
 </html>
