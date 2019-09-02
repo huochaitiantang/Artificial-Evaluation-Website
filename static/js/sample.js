@@ -155,7 +155,8 @@ $(document).ready(function(){
 
         node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'>" 
         // face img line
-        node_string += "<div><img src='/" + face_path + "' width='" + (display_size / 2) + "px' height='128px'></div>"
+        //node_string += "<div><img src='/" + face_path + "' width='" + (display_size / 2) + "px' height='128px'></div>"
+        node_string += "<div><img src='/" + face_path + "' height='" + (display_size / 2) + "px'</div>"
         
         // range line
         node_string += "<div style='margin-top:20px;'><div style='display:inline-block;vertical-align:top;'>0</div>"
