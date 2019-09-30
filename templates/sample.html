@@ -7,7 +7,7 @@
     </head>
 
     <body>
-        <div style="text-align:center;">
+        <div style="text-align:left;">
             <div style="text-align:center;padding:10px;display:inline-block;">
 
                 <div>
@@ -19,7 +19,7 @@
 
                 <div style="padding:10px;">
                     <div style="display:inline-block;vertical-align:bottom;font-size:18px;">该视频片段样本的表情类别被标记为：</div>
-                    <div id='better_rule' style="text-align:center;font-size:18px;color:red;display:inline-block;vertical-align:bottom;"></div>
+                    <div id='emotion' style="text-align:center;font-size:18px;color:red;display:inline-block;vertical-align:bottom;"></div>
                     <div style="font-size:18px;">以下为从该样本中抽取的若干帧图像（包括各帧中人脸的图像）</div>
                     <div style="font-size:18px;">请根据您的判断，给出每帧图像对应于上述表情类别的强度值（0到100）</div>
                     <div style="font-size:18px;">该值无需太准确，只需保证<b>帧间表情强弱的变化趋势</b>大致正确即可。</div>
@@ -28,7 +28,6 @@
 
                 <div id="content_div" style="text-align:center;display:inline-block;vertical-align:top;"></div>
                 <div style="position:fixed;top:30px;right:30px;">
-                    <div>0----------强度值----------100)</div>
                     <canvas id="canvas" style="background-color:#DCDCDC;"></canvas>
                 </div>
                 <div id='submit_info'></div>

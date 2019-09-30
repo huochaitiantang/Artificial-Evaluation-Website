@@ -24,17 +24,18 @@ $(document).ready(function(){
                 ans = JSON.parse(res)
                 console.log(ans)
 
-                var display_size = ans['display_size']
-                var better_rule = ans['better_rule']
+                var display_h = ans['display_h']
+                var emotion = ans['emotion']
                 var sample_id = ans['sample_id']
                 var sample_cnt = ans['sample_cnt']
                 var frame_paths = ans['frame_paths']
-                var face_paths = ans['face_paths']
+                var scores = ans['scores']
+                var orders = ans['orders']
                 var frame_cnt = frame_paths.length
 
                 $("#speed").html("进度：" + sample_id + "/" + sample_cnt)
-                $("#better_rule").html(better_rule)
-                display_sample(frame_paths, face_paths, frame_cnt, display_size)
+                $("#emotion").html(emotion)
+                display_sample(frame_paths, scores, orders, frame_cnt, display_h, emotion)
                 
                 $("#submit_button").click(function(){
                     submit_label(sample_id, frame_cnt, sample_cnt)
@@ -55,125 +56,139 @@ $(document).ready(function(){
                         window.location.href = "/" + sample_id + "?usr_name=" + usr_name 
                     }
                 })
-                draw_canvas(frame_cnt, display_size)
+                draw_canvas(frame_cnt, scores, orders)
             }
         )
     }
 
-    function draw_canvas(frame_cnt, display_size){
+    function draw_canvas(frame_cnt, scores, orders){
         var canvas = document.getElementById('canvas')
-        canvas.width = 200
-        canvas.height = 400
+        var W = 200
+        var H = 400
+        var border = 40
+        var max_frame = orders[frame_cnt - 1]
+        canvas.width = W + border * 1.5
+        canvas.height = H + border * 1.5
         
         var ctx = canvas.getContext('2d')
-        var y_step = canvas.height / frame_cnt
+        var y_step = H / max_frame
+        var x_step = W / 4
 
-        // draw point
+        // draw grid and coordinate axis
+        ctx.beginPath()
+        ctx.strokeStyle="#EEEEEE"
+        ctx.lineWidth=1
+        // x grid
+        for(var i = 0; i < 5; i++){
+            var x0 = i * x_step + border
+            var y0 = border
+            var y1 = H + border
+            ctx.moveTo(x0, y0)
+            ctx.lineTo(x0, y1)
+            ctx.stroke()
+        }
+        // y grid
+        for(var i = 0; i <= 30; i++){
+            var y0 = i / 30 * max_frame * y_step + border
+            var x0 = border
+            var x1 = W + border
+            ctx.moveTo(x0, y0)
+            ctx.lineTo(x1, y0)
+            ctx.stroke()
+        }
+        ctx.closePath()
+        // x axis
+        ctx.fillStyle = "000000"
+        ctx.textBaseline = "bottom"
+        ctx.fillText("表情强度", W + border - 30, border / 2)
+        for(var i = 0; i < 4; i++){
+            ctx.fillText(i, (i+0.5) * x_step + border, border - 5)
+        }
+        // y axis
+        ctx.fillText("帧", 5, H + border - 12)
+        ctx.fillText("序", 5, H + border)
+        ctx.fillText("号", 5, H + border + 12)
+        ctx.textAlign="right"
+        for(var i = 0; i < frame_cnt; i++){
+            ctx.fillText(orders[i] + 1, border - 5, orders[i] * y_step + border + 8)
+        }
+
+        // draw pre scores points
         ctx.fillStyle="#FF0000"
         for(var i = 0; i < frame_cnt; i++){
-            var intensity = $("#range_" + i).val()
-            var y = y_step * (i + 0.5)
-            var x = intensity * 2
+            if(scores[i] < 0.1)
+                x0 = (scores[i] / 0.1) * x_step + border
+            else
+                x0 = ((scores[i] - 0.1) / 0.9 * 3 + 1) * x_step + border
+            y0 = orders[i] * y_step + border
             ctx.beginPath()
-            ctx.arc(x, y, 3, 0, 2*Math.PI)
+            ctx.arc(x0, y0, 2, 0, 2*Math.PI)
             ctx.closePath()
             ctx.fill()
         }
-
-        // draw line
+        // draw pre scores curve
         ctx.beginPath()
-        ctx.strokeStyle="#0000FF"
+        ctx.strokeStyle="#FF0000"
         for(var i = frame_cnt - 2; i >= 0; i--){
-            var intensity = $("#range_" + i).val()
-            var y0 = y_step * (i + 0.5)
-            var x0 = intensity * 2
-            ctx.moveTo(x, y)
-            ctx.lineTo(x0, y0)
+            y = orders[i] * y_step + border
+            if(scores[i] < 0.1)
+                x = (scores[i] / 0.1) * x_step + border
+            else
+                x = ((scores[i] - 0.1) / 0.9 * 3 + 1) * x_step + border
+            ctx.moveTo(x0, y0)
+            ctx.lineTo(x, y)
             ctx.stroke()
-            x = x0
-            y = y0
+            x0 = x
+            y0 = y
         }
         ctx.closePath()
+        // draw pick intensity(discrete)
     }
 
-    // display a sample with all frames and faces
-    function display_sample(frame_paths, face_paths, frame_cnt, display_size){
+    function pre_intensity(score){
+        if(score < 0.1) return 0
+        if(score <= 0.4) return 1
+        if(score <= 0.7) return 2
+        return 3
+    }
+
+    // display a sample with all key frames
+    function display_sample(frame_paths, scores, orders, frame_cnt, display_h, emotion){
         for(var i = 0; i < frame_cnt; i++){
-            $("#content_div").append(display_one_line(frame_paths[i], face_paths[i], i, display_size))
+            $("#content_div").append(display_one_line(frame_paths[i], orders[i], i, display_h, emotion))
 
             // bind the input event after display the input element!!!
-            // range input event
-            $("#range_" + i).bind('input propertychange', function(){
-                var intensity = $(this).val()
-                $(this).parent().parent().next().children().first().next().html(intensity)
-                console.log($(this).parent().parent().next().children().first().next().attr('id'))
-                console.log("intensity:" + intensity)
-                draw_canvas(frame_cnt, display_size)
-            })
-
-            // sub button click
-            $("#button_sub_" + i).click(function(){
-                var intensity = parseInt($(this).parent().prev().children().first().next().children().first().val())
-                if(intensity > 0){
-                    intensity -= 1
-                }
-                $(this).parent().prev().children().first().next().children().first().val(intensity)
-                $(this).next().html(intensity)
-                console.log($(this).next().attr('id'))
-                console.log("intensity:" + intensity)
-                draw_canvas(frame_cnt, display_size)
-            })
-
-            // add button click
-            $("#button_add_" + i).click(function(){
-                var intensity = parseInt($(this).parent().prev().children().first().next().children().first().val())
-                if(intensity < 100){
-                    intensity += 1
-                }
-                $(this).parent().prev().children().first().next().children().first().val(intensity)
-                $(this).prev().html(intensity)
-                console.log($(this).prev().attr('id'))
-                console.log("intensity:" + intensity)
-                draw_canvas(frame_cnt, display_size)
+            // set the default intensity based on score
+            pre_label = pre_intensity(scores[i])
+            console.log(i + " intensity=" + scores[i] + " pre label: " + pre_label)
+            $("#radio_" + i + "_" + pre_label).attr('checked', 'true')
+            $('input[type=radio][name=radio_' + i + ']').change(function(){
+                console.log(this.name + " change:" + this.value)
+                draw_canvas(frame_cnt, scores, orders)
             })
         }
     }
 
     // display one line
-    function display_one_line(frame_path, face_path, frame_ind, display_size){
+    function display_one_line(frame_path, order, frame_ind, display_h, emotion){
         // frame order
-        var node_string = "<div style='padding:10px;'><div style='display:inline-block;vertical-align:top;margin-right:10px;font-size:20px;font-style:italic;'>#" + format_number(frame_ind + 1) + "</div>"
-        
-        // frame img
-        node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'><img src='/" + frame_path + "' height='" + display_size + "px'></div>"
-
-        // input range from 0-100
-        range_id = "range_" + frame_ind
-        range_text = "range_text_" + frame_ind
-        button_sub = "button_sub_" + frame_ind
-        button_add = "button_add_" + frame_ind
-
-        node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'>" 
-        // face img line
-        //node_string += "<div><img src='/" + face_path + "' width='" + (display_size / 2) + "px' height='128px'></div>"
-        node_string += "<div><img src='/" + face_path + "' height='" + (display_size / 2) + "px'</div>"
-        
-        // range line
-        node_string += "<div style='margin-top:20px;'><div style='display:inline-block;vertical-align:top;'>0</div>"
-        node_string += "<div style='display:inline-block;vertical-align:top;'><input id='" + range_id + "' type='range'></div>"
-        node_string += "<div style='display:inline-block;vertical-align:top;'>100</div></div>"
-
-        // button line
-        node_string += " <div style='font-size:18px;margin-top:5px;'><button id='" + button_sub + "' style='display:inline-block;vertical-align:top;margin:5px'>-</button>"
-        node_string += "<div id='" + range_text + "' style='display:inline-block;vertical-align:top;margin:5px;'>50</div>"
-        node_string += "<button id='" + button_add + "' style='display:inline-block;vertical-align:top;margin:5px'>+</button></div>"
-        node_string += "</div>"
-        
+        var node_string = "<div style='padding:10px;'><div style='display:inline-block;vertical-align:top;margin-right:10px;font-size:20px;font-style:italic;'>#" + format_number(frame_ind + 1, 2) + "<br>("+ format_number(order + 1, 4) + ".jpg)</div>"
+        // frame img with face rect
+        node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'><img src='/" + frame_path + "' height='" + display_h + "px'></div>"
+        // choice radio
+        radio_name = "radio_" + frame_ind
+        intensities = new Array("无", "弱", "中", "强")
+        node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'>"
+        for(var j = 0; j < 4; j++){
+            radio_id = "radio_" + frame_ind + "_" + j
+            node_string += "<div><label><input id='" + radio_id + "' name='" + radio_name + "' type='radio' value='" + j + "'/>"+ intensities[j] + "(" + emotion + ")</label></div>"
+        } 
+        node_string += "</div></div>"
         return node_string
     }
 
-    function format_number(num){
-        var bit_max = 2
+
+    function format_number(num, bit_max){
         var res = ''+num
         var bit_sub = bit_max - res.length
         while(bit_sub > 0){
