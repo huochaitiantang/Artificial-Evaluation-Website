@@ -31,11 +31,12 @@ $(document).ready(function(){
                 var frame_paths = ans['frame_paths']
                 var scores = ans['scores']
                 var orders = ans['orders']
+                var clip_path = ans['clip_path']
                 var frame_cnt = frame_paths.length
 
                 $("#speed").html("进度：" + sample_id + "/" + sample_cnt)
                 $("#emotion").html(emotion)
-                display_sample(frame_paths, scores, orders, frame_cnt, display_h, emotion)
+                display_sample(frame_paths, scores, orders, frame_cnt, display_h, emotion, clip_path)
                 
                 $("#submit_button").click(function(){
                     submit_label(sample_id, frame_cnt, sample_cnt)
@@ -233,7 +234,8 @@ $(document).ready(function(){
     }
 
     // display a sample with all key frames
-    function display_sample(frame_paths, scores, orders, frame_cnt, display_h, emotion){
+    function display_sample(frame_paths, scores, orders, frame_cnt, display_h, emotion, clip_path){
+        $("#clip").append("<video controls='controls' style='height:" + display_h + "px;' src='" + clip_path + "'>")
         for(var i = 0; i < frame_cnt; i++){
             $("#content_div").append(display_one_line(frame_paths[i], orders[i], i, display_h, emotion))
 
