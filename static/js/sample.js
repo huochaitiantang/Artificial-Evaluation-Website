@@ -283,57 +283,46 @@ $(document).ready(function(){
     function submit_label(sample_id, frame_cnt, sample_cnt){
         $("#submit_info").empty()
         $("#submit_info").css({"color": "red"});
-        var check_values = check_label_values(frame_cnt)
-        if(check_values != ""){
-            var p = get_promise('/submit/' + sample_id + '/' + check_values)
-            p.then(
-                (res) => {
-                    ans = JSON.parse(res)
-                    if(ans['status'] == 1){
-                        var usr_name = $("#info_input").val().replace(/\s*/g,"")
-                        // jump to next smaple with the usr name
-                        if(sample_id < sample_cnt){
-                            sample_id += 1
-                            window.location.href = "/" + sample_id + "?usr_name=" + usr_name 
-                        }
-                        else{
-                            $("#submit_info").css({"color": "blue"});
-                            $("#submit_info").html("所有标注完成，谢谢您，" + usr_name + "　！")
-                        }
-                    }
-                    else{
-                        $("#submit_info").html("提交失败，请按规则填写！")
-                    }
-                }
-            )
-        }
-    }
-
-    // check if all the radios of items is checked
-    function check_label_values(frame_cnt){
-        var check_values = ""
-        var no_change = true
+        var all_zero = true
+        var values = ""
         for(var i = 0; i < frame_cnt; i++){
-            var intensity = $("#range_" + i).val()
-            if(intensity != 50){
-                no_change = false
+            val = parseInt($("input:radio[name='radio_" + i + "']:checked").val())
+            if(val > 0) all_zero = false
+            values += val + " "
+        }
+        if(all_zero == true){
+            $("#submit_info").html("提交错误:标注结果不能都为0（无表情）!")
+        }
+        else{
+            var usr_name = $("#info_input").val().replace(/\s*/g,"")
+            if(usr_name == ""){
+                $("#submit_info").html("提交错误：请输入有效的姓名以便我们知道你的参与！")
             }
-            check_values += intensity + " "
+            else{
+                values += usr_name
+                var p = get_promise('/submit/' + sample_id + '/' + values)
+                p.then(
+                    (res) => {
+                        ans = JSON.parse(res)
+                        if(ans['status'] == 1){
+                            // jump to next smaple with the usr name
+                            if(sample_id < sample_cnt){
+                                console.log("next")
+                                sample_id += 1
+                                window.location.href = "/" + sample_id + "?usr_name=" + usr_name 
+                            }
+                            else{
+                                $("#submit_info").css({"color": "blue"});
+                                $("#submit_info").html("所有标注完成，谢谢您，" + usr_name + "　！")
+                            }
+                            }
+                        else{
+                            $("#submit_info").html("提交失败，请按要求填写！")
+                        }
+                    }
+                )
+            }
         }
-        
-        if(no_change == true){
-            $("#submit_info").html("提交错误:标注结果不能都是初始值50!")
-            return ""
-        }
-
-        //replace white char
-        var info_input = $("#info_input").val().replace(/\s*/g,"")
-        if(info_input == ""){
-            $("#submit_info").html("提交错误：请输入有效的姓名以便我们知道你的参与！")
-            return ""
-        }
-
-        check_values += info_input
-        return check_values
     }
+
 })

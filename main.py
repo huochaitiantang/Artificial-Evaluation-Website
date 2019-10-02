@@ -7,7 +7,7 @@ import flask
 import random
 import argparse
 from flask import Flask
-app = Flask("Turing")
+app = Flask("Label")
 
 
 def get_args():
@@ -38,7 +38,7 @@ def get_samples():
 
             base_dir = os.path.join(emotion_dir, clip_id)
             frame_dir = os.path.join(base_dir, "frames_with_face")
-            d = {"frames": [], "scores": [], "orders": [], \
+            d = {"frames": [], "scores": [], "orders": [], "clip_id": clip_id, \
                  "clip_path": os.path.join(base_dir, clip_id + ".mp4")}
             
             # key frames read
@@ -58,10 +58,6 @@ emotion_names = ["_", "生气，愤怒", "讨厌，厌恶", "恐惧，害怕", "
 samples = get_samples()
 sample_cnt = len(samples)
 print("Sample Count:", sample_cnt)
-
-save_dir = os.path.join(args.data_base_dir, "label")
-if not os.path.exists(save_dir):
-    os.makedirs(save_dir)
 
 
 @app.route('/')
@@ -101,24 +97,30 @@ def do_submit(sample_id, label_result):
     if sample_id < 1 or sample_id > sample_cnt:
         return json.dumps(info)
     
-    frame_cnt = len(img_ids[sample_id - 1])
-    vid_id = vid_ids[sample_id - 1]
-
+    smp = samples[sample_id - 1]
+    clip_id = smp['clip_id']
+    frame_cnt = len(smp['frames'])
+    
     labels = label_result.encode('utf-8').split()
     if len(labels) != frame_cnt + 1:
         return json.dumps(info)
     usr_name = labels.pop()
-    print(labels, usr_name)
+    print(labels, usr_name, clip_id)
 
     # save file
-    time_str = str(time.time()).replace('.', '_')
-    file_name = os.path.join(args.data_base_dir, "label/{}-{:03d}-{}-{}.txt".format(usr_name, int(sample_id), vid_id, time_str))
+    save_dir = "{}/label/{}".format(args.data_base_dir, usr_name)
+    pre_name = "{}/{}-{:03d}-{}".format(save_dir, usr_name, sample_id, clip_id)
+    if os.path.exists(save_dir):
+        os.system("mv {}* {}/label/repeat/".format(pre_name, args.data_base_dir))
+    else:
+        os.makedirs(save_dir)
 
+    file_name = "{}-{}.txt".format(pre_name, str(time.time()).replace('.', '_'))
     # write to the file
     with open(file_name, 'w') as f:
-        f.write("{}".format(vid_id))
+        f.write("{}".format(clip_id))
         for label in labels:
-            if int(label) < 0 or int(label) > 100:
+            if int(label) < 0 or int(label) > 3:
                 return json.dumps(info)
             f.write(" {}".format(label))
     
