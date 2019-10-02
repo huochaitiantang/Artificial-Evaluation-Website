@@ -61,6 +61,37 @@ $(document).ready(function(){
         )
     }
 
+    function draw_curve(ctx, points){
+        var cnt = points.length
+        // draw points
+        for(var i = 0; i < cnt; i++){
+            ctx.beginPath()
+            ctx.arc(points[i][0], points[i][1], 2, 0, 2*Math.PI)
+            ctx.closePath()
+            ctx.fill()
+        }
+        // draw curve
+        ctx.beginPath()
+        x0 = points[cnt-1][0]
+        y0 = points[cnt-1][1]
+        for(var i = cnt - 2; i >= 0; i--){
+            ctx.moveTo(x0, y0)
+            ctx.lineTo(points[i][0], points[i][1])
+            ctx.stroke()
+            x0 = points[i][0]
+            y0 = points[i][1]
+        }
+        ctx.closePath()
+    }
+
+
+    function draw_point(ctx, x0, y0){
+        ctx.beginPath()
+        ctx.arc(x0, y0, 2, 0, 2*Math.PI)
+        ctx.closePath()
+        ctx.fill()
+    }
+
     function draw_canvas(frame_cnt, scores, orders){
         var canvas = document.getElementById('canvas')
         var W = 200
@@ -68,17 +99,18 @@ $(document).ready(function(){
         var border = 40
         var max_frame = orders[frame_cnt - 1]
         canvas.width = W + border * 1.5
-        canvas.height = H + border * 1.5
+        canvas.height = H + border * 1.5 + 40
         
         var ctx = canvas.getContext('2d')
         var y_step = H / max_frame
         var x_step = W / 4
-
+        
         // draw grid and coordinate axis
+        // x dash grid
         ctx.beginPath()
-        ctx.strokeStyle="#EEEEEE"
+        ctx.strokeStyle="#EAEAEA"
         ctx.lineWidth=1
-        // x grid
+        ctx.setLineDash([2])
         for(var i = 0; i < 5; i++){
             var x0 = i * x_step + border
             var y0 = border
@@ -87,7 +119,8 @@ $(document).ready(function(){
             ctx.lineTo(x0, y1)
             ctx.stroke()
         }
-        // y grid
+        
+        // y dash grid
         for(var i = 0; i <= 30; i++){
             var y0 = i / 30 * max_frame * y_step + border
             var x0 = border
@@ -97,12 +130,37 @@ $(document).ready(function(){
             ctx.stroke()
         }
         ctx.closePath()
-        // x axis
-        ctx.fillStyle = "000000"
-        ctx.textBaseline = "bottom"
-        ctx.fillText("表情强度", W + border - 30, border / 2)
+        
+        // x solid grid
+        ctx.beginPath()
+        ctx.strokeStyle="#00FF00"
         for(var i = 0; i < 4; i++){
-            ctx.fillText(i, (i+0.5) * x_step + border, border - 5)
+            var x0 = (i + 0.5) * x_step + border
+            var y0 = border - 10
+            var y1 = H + border + 10
+            ctx.moveTo(x0, y0)
+            ctx.lineTo(x0, y1)
+            ctx.stroke()
+        }
+
+        // y solid grid
+        for(var i = 0; i < frame_cnt; i++){
+            x0 = border
+            x1 = W + border
+            y0 = orders[i] * y_step + border
+            ctx.moveTo(x0, y0)
+            ctx.lineTo(x1, y0)
+            ctx.stroke()
+        }
+        ctx.closePath()
+
+        // x axis
+        ctx.fillStyle = "#000000"
+        ctx.textBaseline = "bottom"
+        ctx.fillText("表情强度", W + border - 30, 15)
+        intensities = new Array("无", "弱", "中", "强")
+        for(var i = 0; i < 4; i++){
+            ctx.fillText(i + "(" + intensities[i] + ")", (i+0.5) * x_step + border - 8, border - 10)
         }
         // y axis
         ctx.fillText("帧", 5, H + border - 12)
@@ -110,39 +168,61 @@ $(document).ready(function(){
         ctx.fillText("号", 5, H + border + 12)
         ctx.textAlign="right"
         for(var i = 0; i < frame_cnt; i++){
-            ctx.fillText(orders[i] + 1, border - 5, orders[i] * y_step + border + 8)
+            ctx.fillText(orders[i] + 1, border - 5, orders[i] * y_step + border + 6)
         }
 
         // draw pre scores points
         ctx.fillStyle="#FF0000"
+        ctx.strokeStyle="#FF0000"
+        ctx.setLineDash([])
+        points = new Array()
         for(var i = 0; i < frame_cnt; i++){
             if(scores[i] < 0.1)
                 x0 = (scores[i] / 0.1) * x_step + border
             else
                 x0 = ((scores[i] - 0.1) / 0.9 * 3 + 1) * x_step + border
             y0 = orders[i] * y_step + border
-            ctx.beginPath()
-            ctx.arc(x0, y0, 2, 0, 2*Math.PI)
-            ctx.closePath()
-            ctx.fill()
+            points.push(new Array(x0, y0))
         }
-        // draw pre scores curve
-        ctx.beginPath()
-        ctx.strokeStyle="#FF0000"
-        for(var i = frame_cnt - 2; i >= 0; i--){
-            y = orders[i] * y_step + border
-            if(scores[i] < 0.1)
-                x = (scores[i] / 0.1) * x_step + border
-            else
-                x = ((scores[i] - 0.1) / 0.9 * 3 + 1) * x_step + border
-            ctx.moveTo(x0, y0)
-            ctx.lineTo(x, y)
-            ctx.stroke()
-            x0 = x
-            y0 = y
-        }
-        ctx.closePath()
+        draw_curve(ctx, points)
+
         // draw pick intensity(discrete)
+        ctx.fillStyle="#0000FF"
+        ctx.strokeStyle="#0000FF"
+        points = new Array()
+        for(var i = 0; i < frame_cnt; i++){
+            val = parseInt($("input:radio[name='radio_" + i + "']:checked").val())
+            x0 = (val + 0.5) * x_step + border
+            y0 = orders[i] * y_step + border
+            points.push(new Array(x0, y0))
+        }
+        draw_curve(ctx, points)
+
+        // note
+        ctx.textAlign="left"
+        ctx.beginPath()
+        ctx.strokeStyle = "#FF0000"
+        ctx.fillStyle="#FF0000"
+        y0 = canvas.height - 32
+        ctx.moveTo(60, y0)
+        ctx.lineTo(90, y0)
+        ctx.stroke()
+        ctx.fillText("模型事先预测的表情强度", 100, y0 + 5)
+        ctx.closePath()
+        draw_point(ctx, 60, y0)
+        draw_point(ctx, 90, y0)
+
+        ctx.beginPath()
+        ctx.strokeStyle = "#0000FF"
+        ctx.fillStyle="#0000FF"
+        y1 = y0 + 20
+        ctx.moveTo(60, y1)
+        ctx.lineTo(90, y1)
+        ctx.stroke()
+        ctx.fillText("当前标注的表情强度", 100, y1 + 5)
+        ctx.closePath()
+        draw_point(ctx, 60, y1)
+        draw_point(ctx, 90, y1)
     }
 
     function pre_intensity(score){
@@ -160,7 +240,6 @@ $(document).ready(function(){
             // bind the input event after display the input element!!!
             // set the default intensity based on score
             pre_label = pre_intensity(scores[i])
-            console.log(i + " intensity=" + scores[i] + " pre label: " + pre_label)
             $("#radio_" + i + "_" + pre_label).attr('checked', 'true')
             $('input[type=radio][name=radio_' + i + ']').change(function(){
                 console.log(this.name + " change:" + this.value)
