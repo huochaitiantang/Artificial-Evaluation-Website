@@ -111,7 +111,10 @@ def do_submit(sample_id, label_result):
     save_dir = "{}/label/{}".format(args.data_base_dir, usr_name)
     pre_name = "{}/{}-{:03d}-{}".format(save_dir, usr_name, sample_id, clip_id)
     if os.path.exists(save_dir):
-        os.system("mv {}* {}/label/repeat/".format(pre_name, args.data_base_dir))
+        try:
+            os.system("mv {}* {}/label/repeat/".format(pre_name, args.data_base_dir))
+        except Exception as e:
+            print("mv error:", e)
     else:
         os.makedirs(save_dir)
 

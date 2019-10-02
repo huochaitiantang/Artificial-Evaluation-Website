@@ -307,7 +307,6 @@ $(document).ready(function(){
                         if(ans['status'] == 1){
                             // jump to next smaple with the usr name
                             if(sample_id < sample_cnt){
-                                console.log("next")
                                 sample_id += 1
                                 window.location.href = "/" + sample_id + "?usr_name=" + usr_name 
                             }
