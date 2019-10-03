@@ -70,7 +70,9 @@ def get_refers():
     
     for sub_dir in sub_dirs:
         sub_img_dir = os.path.join(img_dir, sub_dir)
+
         img_ids = [os.path.join(sub_img_dir, x) for x in sort_listdir(sub_img_dir)]
+        img_ids = list(filter(lambda x: x.endswith("png"), img_ids))
         img_cnt = len(img_ids)
         step = img_cnt / 3.
         key_imgs = [img_ids[0], img_ids[int(step * 1)], img_ids[int(step * 2)], img_ids[img_cnt - 1]]
