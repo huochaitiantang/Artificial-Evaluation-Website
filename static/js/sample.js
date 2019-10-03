@@ -36,6 +36,7 @@ $(document).ready(function(){
 
                 $("#speed").html("进度：" + sample_id + "/" + sample_cnt)
                 $("#emotion").html(emotion)
+                $("#emotion").attr("href", "/refer/" + ans['emotion_label'])
                 display_sample(frame_paths, scores, orders, frame_cnt, display_h, emotion, clip_path)
                 
                 $("#submit_button").click(function(){

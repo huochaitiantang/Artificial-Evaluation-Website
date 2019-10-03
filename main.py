@@ -53,17 +53,72 @@ def get_samples():
             samples.append(d)
     return samples
 
+
+def get_refers():
+    refers = [[],[],[],[],[],[],[]]
+    base_dir = os.path.join(args.data_base_dir, "CK_extend")
+    img_dir = os.path.join(base_dir, "cohn-kanade-images")
+    label_dir = os.path.join(base_dir, "Emotion")
+    sub_dirs = []
+
+    for d1 in sort_listdir(label_dir):
+        path = os.path.join(label_dir, d1)
+        if os.path.isdir(path):
+            for d2 in sort_listdir(path):
+                if os.path.isdir(os.path.join(path, d2)):
+                    sub_dirs.append("{}/{}".format(d1, d2))
+    
+    for sub_dir in sub_dirs:
+        sub_img_dir = os.path.join(img_dir, sub_dir)
+        img_ids = [os.path.join(sub_img_dir, x) for x in sort_listdir(sub_img_dir)]
+        img_cnt = len(img_ids)
+        step = img_cnt / 3.
+        key_imgs = [img_ids[0], img_ids[int(step * 1)], img_ids[int(step * 2)], img_ids[img_cnt - 1]]
+
+        sub_label_dir = os.path.join(label_dir, sub_dir)
+        if len(os.listdir(sub_label_dir)) > 0:
+            label_file = os.path.join(sub_label_dir, os.listdir(sub_label_dir)[0])
+            with open(label_file) as f:
+                label = int(float(f.readline()))
+                if label != 2:
+                    label = label - 1 if label > 2 else label
+                    refers[label].append(key_imgs)
+    random.seed(1234)
+    for x in refers:
+        random.shuffle(x)
+    return refers
+
+
 #emotion_names = ["_", "Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise"]
 emotion_names = ["_", "生气，愤怒", "讨厌，厌恶", "恐惧，害怕", "开心，高兴", "悲伤，伤心", "惊讶，惊喜"]
 samples = get_samples()
 sample_cnt = len(samples)
+refers = get_refers()
 print("Sample Count:", sample_cnt)
+
 
 
 @app.route('/')
 def do_home():
     return flask.render_template('home.html', sample_cnt=sample_cnt)
 
+
+@app.route('/refer/<int:emotion_id>')
+def do_refer(emotion_id):
+    return flask.render_template('refer.html')
+
+
+@app.route('/refer_init/<int:emotion_id>')
+def do_ref_init(emotion_id):
+    print(emotion_id)
+    emotion_id = max(1, min(emotion_id, len(emotion_names) - 1))
+    info = {}
+    info['display_w'] = 256
+    info['emotion_id'] = emotion_id
+    info['frames_paths'] = refers[emotion_id]
+    info['emotion_names'] = emotion_names
+    return json.dumps(info)
+    
 
 @app.route('/<int:sample_id>')
 def do_sample(sample_id):
@@ -80,6 +135,7 @@ def do_msg_init(sample_id):
     info = {}
     info['display_h'] = 256
     info['emotion'] = emotion_names[smp['class']] # emotion
+    info['emotion_label'] = smp['class']
     info['sample_cnt'] = sample_cnt
     info['sample_id'] = sample_id
     info['clip_path'] = smp['clip_path']
