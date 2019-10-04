@@ -244,9 +244,12 @@ $(document).ready(function(){
             // set the default intensity based on score
             pre_label = pre_intensity(scores[i])
             $("#radio_" + i + "_" + pre_label).attr('checked', 'true')
+            $("#div_" + i + "_" + pre_label).css('background-color', '#98FB98')
             $('input[type=radio][name=radio_' + i + ']').change(function(){
                 console.log(this.name + " change:" + this.value)
                 draw_canvas(frame_cnt, scores, orders)
+                $(this).parent().parent().parent().children().css('background-color', '#ffffff')
+                $(this).parent().parent().css('background-color', '#98FB98')
             })
         }
     }
@@ -263,7 +266,7 @@ $(document).ready(function(){
         node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'>"
         for(var j = 0; j < 4; j++){
             radio_id = "radio_" + frame_ind + "_" + j
-            node_string += "<div><label><input id='" + radio_id + "' name='" + radio_name + "' type='radio' value='" + j + "'/>"+ intensities[j] + "(" + emotion + ")</label></div>"
+            node_string += "<div id='div_" + frame_ind + "_" + j + "'><label><input id='" + radio_id + "' name='" + radio_name + "' type='radio' value='" + j + "'/>"+ intensities[j] + "(" + emotion + ")</label></div>"
         } 
         node_string += "</div></div>"
         return node_string
