@@ -34,6 +34,8 @@ def get_samples():
     data_dir = os.path.join(args.data_base_dir, "dataset")
     for sub_dir in sort_listdir(data_dir):
         emotion_dir = os.path.join(data_dir, sub_dir)
+        if not os.path.isdir(emotion_dir):
+            continue
         for clip_id in sort_listdir(emotion_dir):
 
             base_dir = os.path.join(emotion_dir, clip_id)
