@@ -32,12 +32,11 @@ def sort_listdir(dd):
 def get_samples():
     samples = []
     data_dir = os.path.join(args.data_base_dir, "dataset")
-    for sub_dir in sort_listdir(data_dir):
+    sub_dirs = ["_", "Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise"]
+    for cls in range(1, len(sub_dirs)):
+        sub_dir = sub_dirs[cls]
         emotion_dir = os.path.join(data_dir, sub_dir)
-        if not os.path.isdir(emotion_dir):
-            continue
         for clip_id in sort_listdir(emotion_dir):
-
             base_dir = os.path.join(emotion_dir, clip_id)
             frame_dir = os.path.join(base_dir, "frames_with_face")
             d = {"frames": [], "scores": [], "orders": [], "clip_id": clip_id, \
