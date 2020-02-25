@@ -57,12 +57,15 @@ def get_samples():
 
 def get_refers():
     refers = [[],[],[],[],[],[],[]]
+    allow_subjects = ['S052', 'S055', 'S074', 'S106', 'S111', 'S113', 'S121', 'S124', 'S125', 'S130', 'S132']
     base_dir = os.path.join(args.data_base_dir, "CK_extend")
     img_dir = os.path.join(base_dir, "cohn-kanade-images")
     label_dir = os.path.join(base_dir, "Emotion")
     sub_dirs = []
 
     for d1 in sort_listdir(label_dir):
+        if d1 not in allow_subjects:
+            continue
         path = os.path.join(label_dir, d1)
         if os.path.isdir(path):
             for d2 in sort_listdir(path):
