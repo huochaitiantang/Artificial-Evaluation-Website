@@ -9,33 +9,75 @@
     <body>
         <div style="text-align:left;">
             <div style="text-align:center;display:inline-block;">
-
-                <div id='clip' style='padding:5px;border:2px solid #888888; border-radius: 5px; margin: 5px;display:inline-block;'></div>
-
-                <div>
-                    <button id='prev_sample' style='display:inline-block;vertical-align:bottom;margin-right:10px;'>上一个</button>
-
-                    <div id='speed' style="font-size:25px;display:inline-block;vertical-align:bottom;margin-right:10px;"></div>
-                    <button id='next_sample' style='display:inline-block;vertical-align:bottom;margin-right:10px;'>下一个</button>
+               
+               <div>
+                    <button id='prev_sample' style='display:inline-block;vertical-align:bottom;margin-right:10px;'>Prev</button>
+                    <span id='speed' style="font-size:25px;margin-right:10px;"></span>
+                    <button id='next_sample' style='display:inline-block;vertical-align:bottom;margin-right:10px;'>Next</button>
                 </div>
 
-                <div style="padding:5px;">
-                    <div style="display:inline-block;vertical-align:bottom;font-size:18px;">上面视频的表情类别被标记为：</div>
-                    <a id='emotion' style="text-align:center;font-size:18px;color:red;display:inline-block;vertical-align:bottom;" target="_blank"></a>
-                    <div style="font-size:18px;display:inline-block;vertical-align:bottom;">，请标记以下关键帧绿色框中人脸的表情强度</div>
+                <div style="padding:5px;font-size:18px;">
+                    <!--
+                    Please adjust the key frames first (you can add a new key frame or delete an original key frame). 
+                    <br>Then please annotate the expression intensity of faces marked by green rectangles for all key frames. 
+                    <br>The curve below shows the preview of labeled intensity. You may refer it for better annotation.
+                    <br>
+                    -->
+                    Ground-Truth: <a id='emotion' style="text-align:center;font-size:18px;color:red;display:inline-block;vertical-align:bottom;" target="_blank"></a>
+                    ,FER-Predict: <a id='predict' style="text-align:center;font-size:18px;color:red;display:inline-block;vertical-align:bottom;" target="_blank"></a>
+                    ,Acotr: <span id = 'actor', style="font-size:18px;color:blue;"></span>
+                    ,Gender: <span id = 'gender', style="font-size:18px;color:blue;"></span>
+                    ,Age: <span id = 'age', style="font-size:18px;color:blue;"></span>
+                </div>
+        
+                <div> 
+                    <div style='padding:5px;border:2px solid #888888; border-radius: 5px; margin: 5px;display:inline-block;'><video id='clip0' controls='controls'></div>
+                    <div style='padding:5px;border:2px solid #888888; border-radius: 5px; margin: 5px;display:inline-block;'><video id='clip' controls='controls'></div>
+                    <div style='display:inline-block;vertical-align:top;text-align:left;'>
+                        <div>
+                            Frame: <button id='prev_frame' style='display:inline-block;vertical-align:bottom;margin-right:10px;'>Prev</button>
+                        
+                            <span id='frame_id'> </span>/<span id='frame_cnt'></span>
+                            <button id='next_frame' style='display:inline-block;vertical-align:bottom;margin-right:10px;'>Next</button>
+                        </div>
+
+                        <div>
+                            <input type='text' id='jump_id' value='0' size='4' maxlength='4'/> 
+                            <button id='jump_frame' style='display:inline-block;vertical-align:bottom;margin-right:10px;'>Jump</button>
+                        </div>
+
+                        Key-Frame: <span id='is_key_frame' style='color:blue;'></span><br>
+                        Predition-Score: <span id='predict_score' style='color:blue;'></span><br>
+                        Annotation-Score: <span id='intensity_score' style='color:blue;'></span><br>
+                        <button id='add_key_frame'>Add-Key-Frame</button>
+
+                        <div id='submit_info'></div>
+	                    <div style='margin:10px;'>Labelers:<input id="info_input" type="text" size="8" value={{usr_name}}></div>
+                        <div style='margin:10px;'><button id="submit_button">Submit</button></div>
+
+                    </div>
+
                 </div>
 
+                <div style="text-align:right;">
+                    <div style="display:inline-block;">
+                        <canvas id="canvas" style="background-color:#DCDCDC;"></canvas>
+                    </div>
+                    <div style="text-align:center;display:inline-block;vertical-align:top;">
+                        <table id="key_frames" border="1">
+                            <tr>
+                                <th>No.</th>
+                                <th>Index</th>
+                                <th>Intensity</th>
+                                <th>Show</th>
+                                <th>Delete</th>
+                            </tr>
 
-                <div id="content_div" style="text-align:center;display:inline-block;vertical-align:top;"></div>
-                <div style="position:fixed;top:30px;right:30px;">
-                    <canvas id="canvas" style="background-color:#DCDCDC;"></canvas>
+                        </table>
+                    </div>
+
                 </div>
-                <div id='submit_info'></div>
-	        <div style='margin:10px;'>你的姓名：<input id="info_input" type="text" value={{usr_name}}></div>
-                <div style='margin:10px;'><button id="submit_button">提交结果</button></div>
-
             </div>
         </div>
-
     </body>
 </html>

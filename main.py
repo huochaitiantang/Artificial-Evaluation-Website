@@ -6,6 +6,10 @@ import time
 import flask
 import random
 import argparse
+import cv2
+import numpy as np
+from xml.dom.minidom import parse
+from xml.dom import minidom
 from flask import Flask
 app = Flask("Label")
 
@@ -28,30 +32,85 @@ def sort_listdir(dd):
     dirs.sort()
     return dirs
 
+# parse label xml file
+def parse_xml(fname):
+    with open(fname, 'r') as fh:
+        doc = minidom.parse(fh)
+        root = doc.documentElement
+        metas = root.getElementsByTagName('Metatag')
+        info = {
+            "MovieTitle": metas[0].getAttribute('value'),
+            "ClipName": metas[1].getAttribute('value'),
+            "Emotion": int(metas[2].getAttribute('value')),
+            "NameOfActor": metas[3].getAttribute('value'),
+            "GenderOfActor": metas[4].getAttribute('value'),
+            "AgeOfActor": int(metas[5].getAttribute('value')),
+            "FrameStartIndex": int(metas[6].getAttribute('value')),
+            "FrameEndIndex": int(metas[7].getAttribute('value')),
+            "StartTime": metas[8].getAttribute('value'),
+            "DuratitionTime": metas[9].getAttribute('value'),
+        }
+        faces = root.getElementsByTagName('Faces')[0].getElementsByTagName('Face')
+        d = {}
+        for face in faces:
+            x1 = float(face.getElementsByTagName('x1')[0].childNodes[0].data)
+            y1 = float(face.getElementsByTagName('y1')[0].childNodes[0].data)
+            x2 = float(face.getElementsByTagName('x2')[0].childNodes[0].data)
+            y2 = float(face.getElementsByTagName('y2')[0].childNodes[0].data)
+            d[face.getAttribute('frame')] = [x1, y1, x2, y2]
+        return d, info
+
 
 def get_samples():
     samples = []
     data_dir = os.path.join(args.data_base_dir, "dataset")
     sub_dirs = ["_", "Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise"]
+    cnt = 0
+    acc_cnt = 0
     for cls in range(1, len(sub_dirs)):
         sub_dir = sub_dirs[cls]
         emotion_dir = os.path.join(data_dir, sub_dir)
         for clip_id in sort_listdir(emotion_dir):
             base_dir = os.path.join(emotion_dir, clip_id)
-            frame_dir = os.path.join(base_dir, "frames_with_face")
-            d = {"frames": [], "scores": [], "orders": [], "clip_id": clip_id, \
+            frame_dir = os.path.join(base_dir, "frames")
+            d = {"frames": [], "scores": [], "key_indexs": [], \
+                 "clip_id": clip_id, "faces": [], \
                  "clip_path": os.path.join(base_dir, clip_id + ".mp4")}
-            
+
+            # frames info
+            faced, info = parse_xml(os.path.join(base_dir, "annotation.xml"))
+            f = open(os.path.join(base_dir, "others/pre_predict/predict_score.txt"))
+            predicts = [0] * 7
+            for line in f.readlines():
+                items = line.split()
+                d['frames'].append(os.path.join(frame_dir, items[0]))
+                d['faces'].append(faced[items[0]])
+                cls = int(items[1])
+                d['scores'].append(float(items[2 + cls]))
+                for ii in range(1, 7):
+                    predicts[ii] += float(items[2 + ii])
+            d['predict_label'] = int(np.array(predicts).argmax())
+            f.close()
+            d['class'] = cls
+            img = cv2.imread(d['frames'][0])
+            d['size'] = img.shape
+            d['actor'] = info['NameOfActor']
+            d['gender'] = info['GenderOfActor']
+            d['age'] = info['AgeOfActor']
+
+            cnt += 1
+            if d['class'] == d['predict_label']:
+                acc_cnt += 1
+
             # key frames read
             f = open(os.path.join(base_dir, "key_frame.txt"))
             for line in f.readlines():
                 items = line.split()
-                d['orders'].append(int(items[0]))
-                d['frames'].append(os.path.join(frame_dir, items[1]))
-                d['class'] = int(items[2])
-                d['scores'].append(float(items[3]))
+                d['key_indexs'].append(int(items[0]))
             f.close()
             samples.append(d)
+    samples = sorted(samples, key=lambda x: x['clip_id'], reverse=False)
+    print("Accuracy: {:.5f} ({}/{})".format(float(acc_cnt) / cnt, acc_cnt, cnt))
     return samples
 
 
@@ -95,13 +154,12 @@ def get_refers():
     return refers
 
 
-#emotion_names = ["_", "Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise"]
-emotion_names = ["_", "生气，愤怒", "讨厌，厌恶", "恐惧，害怕", "开心，高兴", "悲伤，伤心", "惊讶，惊喜"]
+emotion_names = ["_", "Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise"]
+#emotion_names = ["_", "生气，愤怒", "讨厌，厌恶", "恐惧，害怕", "开心，高兴", "悲伤，伤心", "惊讶，惊喜"]
 samples = get_samples()
 sample_cnt = len(samples)
 refers = get_refers()
 print("Sample Count:", sample_cnt)
-
 
 
 @app.route('/')
@@ -141,13 +199,20 @@ def do_msg_init(sample_id):
     info = {}
     info['display_h'] = 256
     info['emotion'] = emotion_names[smp['class']] # emotion
-    info['emotion_label'] = smp['class']
+    info['predict'] = emotion_names[smp['class']]
+    info['emotion_cls'] = smp['class'] # emotion
+    info['predict_cls'] = smp['class']
     info['sample_cnt'] = sample_cnt
     info['sample_id'] = sample_id
     info['clip_path'] = smp['clip_path']
     info['frame_paths'] = smp['frames']
     info['scores'] = smp['scores']
-    info['orders'] = smp['orders']
+    info['faces'] = smp['faces']
+    info['key_indexs'] = smp['key_indexs']
+    info['size'] = smp['size']
+    info['actor'] = smp['actor']
+    info['age'] = smp['age']
+    info['gender'] = smp['gender']
     return json.dumps(info)
 
 
