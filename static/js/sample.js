@@ -143,7 +143,7 @@ $(document).ready(function(){
                     //console.log(inter_scores)
 
                     // set or reset the add key frame button
-                    $("#intensity_score").html(inter_scores[frame_id])
+                    $("#intensity_score").html(inter_scores[frame_id].toFixed(5))
                     $("#add_key_frame").attr("disabled", false)
                     $("#is_key_frame").html("No")
                     $("#is_key_frame").css("color", "blue")
@@ -153,7 +153,7 @@ $(document).ready(function(){
                         $("#is_key_frame").css("color", "red")
                         intensity_names = new Array("None", "Weak", "Medium", "Intense")
                         cur_name = intensity_names[keys[target][1]]
-                        $("#intensity_score").html(inter_scores[frame_id] + "[" + cur_name + "]")
+                        $("#intensity_score").html(inter_scores[frame_id].toFixed(5) + "[" + cur_name + "]")
                     }
 
                     // draw preview
@@ -165,18 +165,71 @@ $(document).ready(function(){
         )
     }
 
+    // interpolate the scores of all frames based on key frames
     function inter_keys(frame_cnt, keys){
         var ans = new Array()
         var key_cnt = keys.length
         vals = new Array(0.125, 0.375, 0.625, 0.875)
-        for(var i = 0, k = 0; i < frame_cnt; i++){
-            if((k < key_cnt) && (i == keys[k][0])){
-                ans.push(vals[keys[k][1]])
-                k++
+
+        // smmoth derivative values between three key frames
+        smooth_ds = new Array()
+        prev_d = (vals[keys[1][1]] - vals[keys[0][1]])/(keys[1][0] - keys[0][0])
+        smooth_ds.push(prev_d)
+        for (var k = 1; k < key_cnt - 1; k++){
+            cur_d = (vals[keys[k+1][1]] - vals[keys[k][1]])/(keys[k+1][0] - keys[k][0])
+            // if trend like --, -/, -\, /-, \-, /\, \/, set d = 0
+            if((cur_d == 0)||(prev_d == 0)||(cur_d * prev_d < 0)) smooth_ds.push(0)
+            // if trend like //, \\, set d smooth
+            else smooth_ds.push((prev_d + cur_d) / 2)
+            prev_d = cur_d
+        }
+        smooth_ds.push(prev_d)
+
+        // init derivative of x_(k-1)
+        prev_d = smooth_ds[0]
+        x_prev = keys[0][0]
+        y_prev = vals[keys[0][1]]
+         
+        for(var k = 1; k < key_cnt; k++){
+            x = keys[k][0]
+            y = vals[keys[k][1]]
+            cur_d = smooth_ds[k]
+            
+            diff_x = x - x_prev
+            diff_y = y - y_prev
+            diff_g = cur_d - prev_d
+            sum_x = x + x_prev
+            sum_g = cur_d + prev_d
+            x2 = x * x
+            
+            // f(x) = a*x^3+b*x^2+c*x^2+d
+            // f(x_k) = y_k, f(x_k-1) = y_k-1, f'(x_k) = g_k, f'(x_k-1) = g_k-1
+            a = (sum_g - 2 * (diff_y / diff_x)) / (diff_x * diff_x)
+            b = 0.5 * (diff_g / diff_x - 3 * a * sum_x)
+            c = cur_d - 2 * b * x - 3 * a * x2
+            d = y - c * x - b * x2 - a * x * x2
+
+            for(var j = x_prev; j < x; j++){
+                j2 = j * j
+                cur_y = a * j * j2 + b * j2 + c * j + d
+                ans.push(cur_y)
             }
-            else{
-                ans.push(0)
-            }
+            prev_d = cur_d
+            x_prev = x
+            y_prev = y
+            
+            /* quadratic function: not continuous
+            a = (diff_y - x_prev_d * diff_x) / (diff_x * diff_x)
+            b = x_prev_d - 2 * a * x_prev
+            c = y - a * x * x - b * x
+            */
+        }
+
+        // for frames after second-last key frames
+        for(var j = x; j < frame_cnt; j++){
+            j2 = j * j
+            cur_y = a * j * j2 + b * j2 + c * j + d
+            ans.push(cur_y)
         }
         return ans
     }
@@ -239,21 +292,21 @@ $(document).ready(function(){
         var y_step = H / 4
         
         // draw grid and coordinate axis
-        // x dash grid
+        // y dash grid
         ctx.beginPath()
         ctx.strokeStyle="#EAEAEA"
         ctx.lineWidth=1
         ctx.setLineDash([2])
-        for(var i = 0; i < 5; i++){
-            var y0 = i * y_step + border
-            var x0 = border
-            var x1 = W + border
+        for(var i = 0; i < 4; i++){
+            var y0 = (i + 0.5) * y_step + border
+            var x0 = border - 10
+            var x1 = W + border + 10
             ctx.moveTo(x0, y0)
             ctx.lineTo(x1, y0)
             ctx.stroke()
         }
         
-        // y dash grid
+        // x dash grid
         for(var i = 0; i <= 30; i++){
             var x0 = i / 30 * frame_cnt * x_step + border
             var y0 = border
@@ -267,10 +320,10 @@ $(document).ready(function(){
         // y solid grid
         ctx.beginPath()
         ctx.strokeStyle="#00FF00"
-        for(var i = 0; i < 4; i++){
-            var y0 = (i + 0.5) * y_step + border
-            var x0 = border - 10
-            var x1 = W + border + 10
+        for(var i = 0; i < 5; i++){
+            var y0 = i * y_step + border
+            var x0 = border
+            var x1 = W + border
             ctx.moveTo(x0, y0)
             ctx.lineTo(x1, y0)
             ctx.stroke()
@@ -380,24 +433,6 @@ $(document).ready(function(){
         return 3
     }
 
-    function insert_key_frame(){
-
-    }
-
-    function delete_key_frame(i){}{
-        key_frames = get_all_key_frames()
-    }
-
-    function get_all_key_frames(){
-       trs = $("#key_frames").children(".key_frame_item") 
-       for(var i = 0; i < trs.length; i++){
-            tds = trs[i].childre("td")
-            no = parseInt(tds[0].html())
-            index = parseInt(tds[1].html())
-            console.log("Key Frame:" + no + " [" + index + "]")
-       }
-       return 0
-    }
 
     function add_key_frame(i, ind, intensity, node){
         node_no = "<td>" + i + "</td>"
@@ -438,39 +473,6 @@ $(document).ready(function(){
             add_key_frame(i + 1, ind, intensity, null)
         }
     }
-
-    // display a sample with all frames
-    function display_sample(frame_paths, faces, scores, key_indexs, frame_cnt, display_h, emotion, predict, clip_path){
-            // set the default intensity based on score
-            pre_label = pre_intensity(scores[i])
-            $("#radio_" + i + "_" + pre_label).attr('checked', 'true')
-            $("#div_" + i + "_" + pre_label).css('background-color', '#98FB98')
-            $('input[type=radio][name=radio_' + i + ']').change(function(){
-                console.log(this.name + " change:" + this.value)
-                //draw_canvas(frame_cnt, scores, orders)
-                $(this).parent().parent().parent().children().css('background-color', '#ffffff')
-                $(this).parent().parent().css('background-color', '#98FB98')
-            })
-    }
-
-    // display one line
-    function display_one_line(frame_path, order, frame_ind, display_h, emotion){
-        // frame order
-        var node_string = "<div style='padding:10px;'><div style='display:inline-block;vertical-align:top;margin-right:10px;font-size:20px;font-style:italic;'>#" + format_number(frame_ind + 1, 2) + "<br>("+ format_number(order + 1, 4) + ".jpg)</div>"
-        // frame img with face rect
-        node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'><img src='/" + frame_path + "' height='" + display_h + "px'></div>"
-        // choice radio
-        radio_name = "radio_" + frame_ind
-        intensities = new Array("无", "弱", "中", "强")
-        node_string += "<div style='display:inline-block;vertical-align:top;margin-right:10px;'>"
-        for(var j = 0; j < 4; j++){
-            radio_id = "radio_" + frame_ind + "_" + j
-            node_string += "<div id='div_" + frame_ind + "_" + j + "'><label><input id='" + radio_id + "' name='" + radio_name + "' type='radio' value='" + j + "'/>"+ intensities[j] + "(" + emotion + ")</label></div>"
-        } 
-        node_string += "</div></div>"
-        return node_string
-    }
-
 
     function format_number(num, bit_max){
         var res = ''+num
