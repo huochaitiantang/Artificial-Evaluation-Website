@@ -50,7 +50,7 @@ $(document).ready(function(){
                 $('#actor').html(actor)
                 $('#age').html(age)
                 $('#gender').html(gender)
-                $('#frame_cnt').html(frame_cnt)
+                $('#frame_cnt').html(format_number(frame_cnt, 3))
 
                 $('#clip').attr('width', display_w)
                 $('#clip').attr('src', clip_path)
