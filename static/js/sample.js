@@ -24,7 +24,7 @@ $(document).ready(function(){
                 ans = JSON.parse(res)
                 console.log(ans)
 
-                var display_h = ans['display_h']
+                var display_w = ans['display_w']
                 var emotion = ans['emotion']
                 var predict = ans['predict']
 
@@ -52,9 +52,9 @@ $(document).ready(function(){
                 $('#gender').html(gender)
                 $('#frame_cnt').html(frame_cnt)
 
-                $('#clip').css('height', display_h)
+                $('#clip').attr('width', display_w)
                 $('#clip').attr('src', clip_path)
-                $('#clip0').css('height', display_h)
+                $('#clip0').attr('width', display_w)
                 $('#clip0').attr('src', clip_path)
                 //draw_canvas(frame_cnt, scores, orders)
 
@@ -278,7 +278,7 @@ $(document).ready(function(){
 
     function draw_canvas(frame_id, frame_cnt, keys, inter_scores, scores){
         var canvas = document.getElementById('canvas')
-        var W = 600
+        var W = 750
         var H = 200
         var border = 45
         
@@ -403,7 +403,7 @@ $(document).ready(function(){
         base_y = canvas.height - 15
         ctx.strokeStyle = "#00FFFF"
         ctx.fillStyle="#00FFFF"
-        x0 = 150
+        x0 = 200
         points = new Array(new Array(x0, base_y), new Array(x0 + 30, base_y))
         draw_curve(ctx, points, true)
         ctx.fillStyle="#000000"
@@ -411,7 +411,7 @@ $(document).ready(function(){
 
         ctx.strokeStyle = "#FF0000"
         ctx.fillStyle="#FF0000"
-        x0 = 270
+        x0 = 320
         points = new Array(new Array(x0, base_y), new Array(x0 + 30, base_y))
         draw_curve(ctx, points, true)
         ctx.fillStyle="#000000"
@@ -419,7 +419,7 @@ $(document).ready(function(){
 
         ctx.strokeStyle = "#0000FF"
         ctx.fillStyle="#0000FF"
-        x0 = 390
+        x0 = 440
         points = new Array(new Array(x0, base_y), new Array(x0 + 30, base_y))
         draw_curve(ctx, points, true)
         ctx.fillStyle="#000000"

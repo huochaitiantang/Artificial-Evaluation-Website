@@ -197,7 +197,7 @@ def do_msg_init(sample_id):
     sample_id = max(min(sample_cnt, sample_id), 1)
     smp = samples[sample_id - 1]
     info = {}
-    info['display_h'] = 256
+    info['display_w'] = 425
     info['emotion'] = emotion_names[smp['class']] # emotion
     info['predict'] = emotion_names[smp['class']]
     info['emotion_cls'] = smp['class'] # emotion

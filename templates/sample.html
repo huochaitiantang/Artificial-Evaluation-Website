@@ -25,7 +25,7 @@
                     -->
                     Ground-Truth: <a id='emotion' style="text-align:center;font-size:18px;color:red;display:inline-block;vertical-align:bottom;" target="_blank"></a>
                     ,FER-Predict: <a id='predict' style="text-align:center;font-size:18px;color:red;display:inline-block;vertical-align:bottom;" target="_blank"></a>
-                    ,Acotr: <span id = 'actor', style="font-size:18px;color:blue;"></span>
+                    ,Actor: <span id = 'actor', style="font-size:18px;color:blue;"></span>
                     ,Gender: <span id = 'gender', style="font-size:18px;color:blue;"></span>
                     ,Age: <span id = 'age', style="font-size:18px;color:blue;"></span>
                 </div>
@@ -34,26 +34,29 @@
                     <div style='padding:5px;border:2px solid #888888; border-radius: 5px; margin: 5px;display:inline-block;'><video id='clip0' controls='controls'></div>
                     <div style='padding:5px;border:2px solid #888888; border-radius: 5px; margin: 5px;display:inline-block;'><video id='clip' controls='controls'></div>
                     <div style='display:inline-block;vertical-align:top;text-align:left;'>
-                        <div>
-                            Frame: <button id='prev_frame' style='display:inline-block;vertical-align:bottom;margin-right:10px;'>Prev</button>
-                        
-                            <span id='frame_id'> </span>/<span id='frame_cnt'></span>
-                            <button id='next_frame' style='display:inline-block;vertical-align:bottom;margin-right:10px;'>Next</button>
-                        </div>
-
-                        <div>
-                            <input type='text' id='jump_id' value='0' size='4' maxlength='4'/> 
-                            <button id='jump_frame' style='display:inline-block;vertical-align:bottom;margin-right:10px;'>Jump</button>
-                        </div>
-
                         Key-Frame: <span id='is_key_frame' style='color:blue;'></span><br>
                         Predition-Score: <span id='predict_score' style='color:blue;'></span><br>
                         Annotation-Score: <span id='intensity_score' style='color:blue;'></span><br>
-                        <button id='add_key_frame'>Add-Key-Frame</button>
 
-                        <div id='submit_info'></div>
-	                    <div style='margin:10px;'>Labelers:<input id="info_input" type="text" size="8" value={{usr_name}}></div>
-                        <div style='margin:10px;'><button id="submit_button">Submit</button></div>
+                        <div style='margin:5px;'>
+                            Frame: <button id='prev_frame' style='display:inline-block;vertical-align:bottom;margin-right:10px;'>Prev</button>
+                        
+                            <span id='frame_id' style='color:red;'> </span>/<span id='frame_cnt'></span>
+                            <button id='next_frame' style='display:inline-block;vertical-align:bottom;margin-right:10px;'>Next</button>
+                        </div>
+
+                        <div style='margin:5px;'>
+                            <button id='jump_frame' style='display:inline-block;vertical-align:bottom;margin-right:10px;'>Jump-to-Frame</button>
+                            <input type='text' id='jump_id' value='0' size='4' maxlength='4'/> 
+                        </div>
+
+                        <button id='add_key_frame' style='margin:5px;'>Add-Key-Frame</button>
+
+	                    <div style='margin:5px;'>
+                            Labelers:<input id="info_input" type="text" size="4" value={{usr_name}}>
+                            <button id="submit_button">Submit</button>
+                            <div id='submit_info'>submit_info</div>
+                        </div>
 
                     </div>
 
