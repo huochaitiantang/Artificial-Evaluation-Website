@@ -67,19 +67,23 @@ def get_samples():
     sub_dirs = ["_", "Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise"]
     cnt = 0
     acc_cnt = 0
-    for cls in range(1, len(sub_dirs)):
+    #for cls in range(1, len(sub_dirs)):
+    for cls in range(1, 2):
         sub_dir = sub_dirs[cls]
         emotion_dir = os.path.join(data_dir, sub_dir)
+        print("For ", sub_dir)
         for clip_id in sort_listdir(emotion_dir):
             base_dir = os.path.join(emotion_dir, clip_id)
             frame_dir = os.path.join(base_dir, "frames")
             d = {"frames": [], "scores": [], "key_indexs": [], \
                  "clip_id": clip_id, "faces": [], \
-                 "clip_path": os.path.join(base_dir, clip_id + ".mp4")}
+                 "clip_path0": os.path.join(base_dir, clip_id + ".mp4"),
+                 "clip_path": "{}/vid_with_faces/{}.mp4".format(args.data_base_dir, clip_id),
+                 }
 
             # frames info
             faced, info = parse_xml(os.path.join(base_dir, "annotation.xml"))
-            f = open(os.path.join(base_dir, "others/pre_predict/predict_score.txt"))
+            f = open("{}/predict_score/{}.txt".format(args.data_base_dir, clip_id))
             predicts = [0] * 7
             for line in f.readlines():
                 items = line.split()
@@ -88,8 +92,8 @@ def get_samples():
                 cls = int(items[1])
                 d['scores'].append(float(items[2 + cls]))
                 for ii in range(1, 7):
-                    predicts[ii] += float(items[2 + ii])
-            d['predict_label'] = int(np.array(predicts).argmax())
+                    predicts[ii] = float(items[2 + ii])
+            d['predict_label'] = int(np.array(predicts)[1:].argmax()) + 1
             f.close()
             d['class'] = cls
             img = cv2.imread(d['frames'][0])
@@ -97,17 +101,11 @@ def get_samples():
             d['actor'] = info['NameOfActor']
             d['gender'] = info['GenderOfActor']
             d['age'] = info['AgeOfActor']
+            d['key_indexs'] = [0, len(d['frames']) - 1]
 
             cnt += 1
             if d['class'] == d['predict_label']:
                 acc_cnt += 1
-
-            # key frames read
-            f = open(os.path.join(base_dir, "key_frame.txt"))
-            for line in f.readlines():
-                items = line.split()
-                d['key_indexs'].append(int(items[0]))
-            f.close()
             samples.append(d)
     samples = sorted(samples, key=lambda x: x['clip_id'], reverse=False)
     print("Accuracy: {:.5f} ({}/{})".format(float(acc_cnt) / cnt, acc_cnt, cnt))
@@ -155,7 +153,6 @@ def get_refers():
 
 
 emotion_names = ["_", "Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise"]
-#emotion_names = ["_", "生气，愤怒", "讨厌，厌恶", "恐惧，害怕", "开心，高兴", "悲伤，伤心", "惊讶，惊喜"]
 samples = get_samples()
 sample_cnt = len(samples)
 refers = get_refers()
@@ -199,12 +196,13 @@ def do_msg_init(sample_id):
     info = {}
     info['display_w'] = 425
     info['emotion'] = emotion_names[smp['class']] # emotion
-    info['predict'] = emotion_names[smp['class']]
+    info['predict'] = emotion_names[smp['predict_label']]
     info['emotion_cls'] = smp['class'] # emotion
-    info['predict_cls'] = smp['class']
+    info['predict_cls'] = smp['predict_label']
     info['sample_cnt'] = sample_cnt
     info['sample_id'] = sample_id
     info['clip_path'] = smp['clip_path']
+    info['clip_path0'] = smp['clip_path0']
     info['frame_paths'] = smp['frames']
     info['scores'] = smp['scores']
     info['faces'] = smp['faces']
@@ -229,14 +227,25 @@ def do_submit(sample_id, label_result):
     frame_cnt = len(smp['frames'])
     
     labels = label_result.encode('utf-8').split()
-    if len(labels) != frame_cnt + 1:
-        return json.dumps(info)
     usr_name = labels.pop()
-    print(labels, usr_name, clip_id)
+    print("recept:", clip_id, usr_name, labels)
+
+    try:
+        vals = [0, 0.333, 0.667, 1]
+        keys = []
+        for i in range(0, len(labels), 2):
+            ind = int(labels[i])
+            assert(ind < frame_cnt and ind >= 0)
+            val = vals[int(labels[i+1])]
+            keys.append((ind, val))
+        print("annotation:", keys)
+    except Exception as e:
+        print(e)
+        return json.dumps(info)
 
     # save file
     save_dir = "{}/label/{}".format(args.data_base_dir, usr_name)
-    pre_name = "{}/{}-{:03d}-{}".format(save_dir, usr_name, sample_id, clip_id)
+    pre_name = "{}/{}-{:04d}-{}".format(save_dir, usr_name, sample_id, clip_id)
     if os.path.exists(save_dir):
         try:
             os.system("mv {}* {}/label/repeat/".format(pre_name, args.data_base_dir))
@@ -245,15 +254,13 @@ def do_submit(sample_id, label_result):
     else:
         os.makedirs(save_dir)
 
-    file_name = "{}-{}.txt".format(pre_name, str(time.time()).replace('.', '_'))
+    file_name = "{}-{}.txt".format(pre_name, str(time.time()).replace('.', '+'))
     # write to the file
     with open(file_name, 'w') as f:
-        f.write("{}".format(clip_id))
-        for label in labels:
-            if int(label) < 0 or int(label) > 3:
-                return json.dumps(info)
-            f.write(" {}".format(label))
-    
+        f.write("{} {}".format(clip_id, len(keys)))
+        for kk in keys:
+            f.write(" {} {}".format(kk[0], kk[1]))
+
     info['status'] = 1
     return json.dumps(info)
 

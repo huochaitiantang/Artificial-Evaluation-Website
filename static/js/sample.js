@@ -35,6 +35,7 @@ $(document).ready(function(){
                 var faces = ans['faces']
                 var key_indexs = ans['key_indexs']
                 var clip_path = ans['clip_path']
+                var clip_path0 = ans['clip_path0']
                 var origin_size = ans['size']
                 var frame_cnt = frame_paths.length
 
@@ -50,12 +51,12 @@ $(document).ready(function(){
                 $('#actor').html(actor)
                 $('#age').html(age)
                 $('#gender').html(gender)
-                $('#frame_cnt').html(format_number(frame_cnt, 3))
+                $('#frame_cnt').html(format_number(frame_cnt - 1, 3))
 
                 $('#clip').attr('width', display_w)
                 $('#clip').attr('src', clip_path)
                 $('#clip0').attr('width', display_w)
-                $('#clip0').attr('src', clip_path)
+                $('#clip0').attr('src', clip_path0)
                 //draw_canvas(frame_cnt, scores, orders)
 
                 init_key_frames(scores, key_indexs)
@@ -124,6 +125,7 @@ $(document).ready(function(){
                 setInterval(function(){
                     vid = document.getElementById('clip')
                     frame_id = Math.round(vid.currentTime * 25)
+                    frame_id = Math.min(frame_cnt - 1, Math.max(0, frame_id))
                     $("#frame_id").html(format_number(frame_id, 3))
                     $("#predict_score").html(scores[frame_id])
 
@@ -169,7 +171,7 @@ $(document).ready(function(){
     function inter_keys(frame_cnt, keys){
         var ans = new Array()
         var key_cnt = keys.length
-        vals = new Array(0.125, 0.375, 0.625, 0.875)
+        vals = new Array(0, 0.33, 0.66, 1)
 
         // smmoth derivative values between three key frames
         smooth_ds = new Array()
@@ -288,8 +290,8 @@ $(document).ready(function(){
         //console.log(frame_id + " " + frame_cnt + " " + keys + " " + inter_scores + " " + scores)
         
         var ctx = canvas.getContext('2d')
-        var x_step = W / frame_cnt
-        var y_step = H / 4
+        var x_step = W / (frame_cnt - 1)
+        var y_step = H / 3
         
         // draw grid and coordinate axis
         // y dash grid
@@ -297,10 +299,10 @@ $(document).ready(function(){
         ctx.strokeStyle="#EAEAEA"
         ctx.lineWidth=1
         ctx.setLineDash([2])
-        for(var i = 0; i < 4; i++){
-            var y0 = (i + 0.5) * y_step + border
-            var x0 = border - 10
-            var x1 = W + border + 10
+        for(var i = 0; i < 6; i++){
+            var y0 = i * y_step / 2 + border
+            var x0 = border - 5
+            var x1 = W + border + 5
             ctx.moveTo(x0, y0)
             ctx.lineTo(x1, y0)
             ctx.stroke()
@@ -308,7 +310,7 @@ $(document).ready(function(){
         
         // x dash grid
         for(var i = 0; i <= 30; i++){
-            var x0 = i / 30 * frame_cnt * x_step + border
+            var x0 = i / 30 * (frame_cnt-1) * x_step + border
             var y0 = border
             var y1 = H + border
             ctx.moveTo(x0, y0)
@@ -320,10 +322,10 @@ $(document).ready(function(){
         // y solid grid
         ctx.beginPath()
         ctx.strokeStyle="#00FF00"
-        for(var i = 0; i < 5; i++){
+        for(var i = 0; i < 4; i++){
             var y0 = i * y_step + border
-            var x0 = border
-            var x1 = W + border
+            var x0 = border - 5
+            var x1 = W + border + 5
             ctx.moveTo(x0, y0)
             ctx.lineTo(x1, y0)
             ctx.stroke()
@@ -345,11 +347,11 @@ $(document).ready(function(){
         ctx.fillText("Intensity", 0, 0)
         intensities = new Array("None", "Weak", "Medium", "Intense")
         for(var i = 0; i < 4; i++){
-            ctx.fillText(intensities[3 - i], border + W + 5, (i+0.5) * y_step + border + 4)
+            ctx.fillText(intensities[3 - i], border + W + 5, i * y_step + border + 4)
         }
-        vals = new Array("0.000", "0.125", "0.250", "0.375", "0.500", "0.625", "0.750", "0.875", "1.000")
-        for(var i = 0; i < 9; i++){
-            ctx.fillText(vals[8 - i], 5, i * y_step / 2 + border + 4)
+        vals = new Array("0.000", "0.167", "0.333", "0.500", "0.667", "0.833", "1.000")
+        for(var i = 0; i < 7; i++){
+            ctx.fillText(vals[6 - i], 5, i * y_step / 2 + border + 4)
         }
 
         // x axis
@@ -427,9 +429,9 @@ $(document).ready(function(){
     }
 
     function pre_intensity(score){
-        if(score < 0.25) return 0
+        if(score < 0.167) return 0
         if(score < 0.5) return 1
-        if(score < 0.75) return 2
+        if(score < 0.833) return 2
         return 3
     }
 
@@ -485,23 +487,31 @@ $(document).ready(function(){
     }
 
     // submit label result
-    function submit_label(sample_id, frame_cnt, sample_cnt){
+    function submit_label(sample_id, sample_cnt){
         $("#submit_info").empty()
         $("#submit_info").css({"color": "red"});
         var all_zero = true
         var values = ""
-        for(var i = 0; i < frame_cnt; i++){
-            val = parseInt($("input:radio[name='radio_" + i + "']:checked").val())
-            if(val > 0) all_zero = false
-            values += val + " "
+                    
+        trs = $("#key_frames").find(".key_frame_item")
+        //console.log(trs)
+        // find the current index and get all keys values
+        target = -1
+        keys = new Array()
+        for(var j = 0; j < trs.length; j++){
+            ind = parseInt(trs[j].children[1].firstChild.data)
+            label_intensity = parseInt($("#select_" + ind).val())
+            values = values + ind + " " + label_intensity + " "
+            if(label_intensity > 0) all_zero = false
         }
+                        
         if(all_zero == true){
-            $("#submit_info").html("提交错误:标注结果不能都为0（无表情）!")
+            $("#submit_info").html("Error: all label is 0!")
         }
         else{
             var usr_name = $("#info_input").val().replace(/\s*/g,"")
             if(usr_name == ""){
-                $("#submit_info").html("提交错误：请输入有效的姓名以便我们知道你的参与！")
+                $("#submit_info").html("Error: invalid name!")
             }
             else{
                 values += usr_name
@@ -517,11 +527,11 @@ $(document).ready(function(){
                             }
                             else{
                                 $("#submit_info").css({"color": "blue"});
-                                $("#submit_info").html("所有标注完成，谢谢您，" + usr_name + "　！")
+                                $("#submit_info").html("Done! Thank you, " + usr_name + "　！")
                             }
-                            }
+                        }
                         else{
-                            $("#submit_info").html("提交失败，请按要求填写！")
+                            $("#submit_info").html("Error!")
                         }
                     }
                 )
