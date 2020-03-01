@@ -67,8 +67,7 @@ def get_samples():
     sub_dirs = ["_", "Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise"]
     cnt = 0
     acc_cnt = 0
-    #for cls in range(1, len(sub_dirs)):
-    for cls in range(1, 2):
+    for cls in range(1, len(sub_dirs)):
         sub_dir = sub_dirs[cls]
         emotion_dir = os.path.join(data_dir, sub_dir)
         print("For ", sub_dir)
@@ -86,6 +85,12 @@ def get_samples():
                 items = line.split()
                 cls = int(items[1])
                 d['smooth_scores'].append(float(items[2 + cls]))
+            f.close()
+
+            f = open("{}/key_frames/{}.txt".format(args.data_base_dir, clip_id))
+            for line in f.readlines():
+                d['key_indexs'].append(int(line.split()[0]))
+            f.close()
 
             # frames info
             faced, info = parse_xml(os.path.join(base_dir, "annotation.xml"))
@@ -107,7 +112,6 @@ def get_samples():
             d['actor'] = info['NameOfActor']
             d['gender'] = info['GenderOfActor']
             d['age'] = info['AgeOfActor']
-            d['key_indexs'] = [0, len(d['frames']) - 1]
 
             cnt += 1
             if d['class'] == d['predict_label']:
