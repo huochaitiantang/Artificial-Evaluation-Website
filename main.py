@@ -76,10 +76,16 @@ def get_samples():
             base_dir = os.path.join(emotion_dir, clip_id)
             frame_dir = os.path.join(base_dir, "frames")
             d = {"frames": [], "scores": [], "key_indexs": [], \
-                 "clip_id": clip_id, "faces": [], \
+                 "clip_id": clip_id, "faces": [], "smooth_scores": [], \
                  "clip_path0": os.path.join(base_dir, clip_id + ".mp4"),
                  "clip_path": "{}/vid_with_faces/{}.mp4".format(args.data_base_dir, clip_id),
                  }
+
+            f = open("{}/predict_score_smooth/{}.txt".format(args.data_base_dir, clip_id))
+            for line in f.readlines():
+                items = line.split()
+                cls = int(items[1])
+                d['smooth_scores'].append(float(items[2 + cls]))
 
             # frames info
             faced, info = parse_xml(os.path.join(base_dir, "annotation.xml"))
@@ -205,6 +211,7 @@ def do_msg_init(sample_id):
     info['clip_path0'] = smp['clip_path0']
     info['frame_paths'] = smp['frames']
     info['scores'] = smp['scores']
+    info['smooth_scores'] = smp['smooth_scores']
     info['faces'] = smp['faces']
     info['key_indexs'] = smp['key_indexs']
     info['size'] = smp['size']

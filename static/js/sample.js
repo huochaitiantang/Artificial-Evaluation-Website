@@ -32,6 +32,7 @@ $(document).ready(function(){
                 var sample_cnt = ans['sample_cnt']
                 var frame_paths = ans['frame_paths']
                 var scores = ans['scores']
+                var smooth_scores = ans['smooth_scores']
                 var faces = ans['faces']
                 var key_indexs = ans['key_indexs']
                 var clip_path = ans['clip_path']
@@ -59,7 +60,7 @@ $(document).ready(function(){
                 $('#clip0').attr('src', clip_path0)
                 //draw_canvas(frame_cnt, scores, orders)
 
-                init_key_frames(scores, key_indexs)
+                init_key_frames(smooth_scores, key_indexs)
                 
                 $("#submit_button").click(function(){
                     submit_label(sample_id, frame_cnt, sample_cnt)
@@ -99,7 +100,7 @@ $(document).ready(function(){
                 $("#add_key_frame").click(function(){
                     frame_id = parseInt($("#frame_id").html())
                     trs = $(this).parent().parent().next().find("table .key_frame_item")
-                    intensity = pre_intensity(scores[frame_id])
+                    intensity = pre_intensity(smooth_scores[frame_id])
                     flag = true
                     prev_tr = $(this).parent().parent().next().find("table tr")[0]
 
@@ -127,7 +128,7 @@ $(document).ready(function(){
                     frame_id = Math.round(vid.currentTime * 25)
                     frame_id = Math.min(frame_cnt - 1, Math.max(0, frame_id))
                     $("#frame_id").html(format_number(frame_id, 3))
-                    $("#predict_score").html(scores[frame_id])
+                    $("#predict_score").html(smooth_scores[frame_id])
 
                     trs = $("#key_frames").find(".key_frame_item")
                     //console.log(trs)
@@ -159,7 +160,7 @@ $(document).ready(function(){
                     }
 
                     // draw preview
-                    draw_canvas(frame_id, frame_cnt, keys, inter_scores, scores)
+                    draw_canvas(frame_id, frame_cnt, keys, inter_scores, scores, smooth_scores)
 
                 }, 40)
 
@@ -278,7 +279,7 @@ $(document).ready(function(){
         ctx.fill()
     }
 
-    function draw_canvas(frame_id, frame_cnt, keys, inter_scores, scores){
+    function draw_canvas(frame_id, frame_cnt, keys, inter_scores, scores, smooth_scores){
         var canvas = document.getElementById('canvas')
         var W = 750
         var H = 200
@@ -362,13 +363,22 @@ $(document).ready(function(){
         }
         
         // draw pre scores points
-        ctx.fillStyle="#00FFFF"
-        ctx.strokeStyle="#00FFFF"
+        ctx.strokeStyle="#DDA0DD"
         ctx.setLineDash([])
         points = new Array()
         for(var i = 0; i < frame_cnt; i++){
             x0 = i * x_step + border
             y0 = (1.0 - scores[i]) * H + border
+            points.push(new Array(x0, y0))
+        }
+        draw_curve(ctx, points, false)
+
+        // draw pre smooth scores points
+        ctx.strokeStyle="#00FFFF"
+        points = new Array()
+        for(var i = 0; i < frame_cnt; i++){
+            x0 = i * x_step + border
+            y0 = (1.0 - smooth_scores[i]) * H + border
             points.push(new Array(x0, y0))
         }
         draw_curve(ctx, points, false)
@@ -403,17 +413,26 @@ $(document).ready(function(){
 
         // note
         base_y = canvas.height - 15
-        ctx.strokeStyle = "#00FFFF"
-        ctx.fillStyle="#00FFFF"
+
+        ctx.strokeStyle = "#DDA0DD"
+        ctx.fillStyle="#DDA0DD"
         x0 = 200
         points = new Array(new Array(x0, base_y), new Array(x0 + 30, base_y))
         draw_curve(ctx, points, true)
         ctx.fillStyle="#000000"
-        ctx.fillText("Predition", x0 + 35, base_y + 4)
+        ctx.fillText("Prediction", x0 + 35, base_y + 4)
+
+        ctx.strokeStyle = "#00FFFF"
+        ctx.fillStyle="#00FFFF"
+        x0 = 320
+        points = new Array(new Array(x0, base_y), new Array(x0 + 30, base_y))
+        draw_curve(ctx, points, true)
+        ctx.fillStyle="#000000"
+        ctx.fillText("Smooth Prediction", x0 + 35, base_y + 4)
 
         ctx.strokeStyle = "#FF0000"
         ctx.fillStyle="#FF0000"
-        x0 = 320
+        x0 = 480
         points = new Array(new Array(x0, base_y), new Array(x0 + 30, base_y))
         draw_curve(ctx, points, true)
         ctx.fillStyle="#000000"
@@ -421,7 +440,7 @@ $(document).ready(function(){
 
         ctx.strokeStyle = "#0000FF"
         ctx.fillStyle="#0000FF"
-        x0 = 440
+        x0 = 600
         points = new Array(new Array(x0, base_y), new Array(x0 + 30, base_y))
         draw_curve(ctx, points, true)
         ctx.fillStyle="#000000"
@@ -468,10 +487,10 @@ $(document).ready(function(){
        })
     }
 
-    function init_key_frames(scores, key_indexs){
+    function init_key_frames(smooth_scores, key_indexs){
         for(var i = 0; i < key_indexs.length; i++){
             ind = key_indexs[i]
-            intensity = pre_intensity(scores[ind])
+            intensity = pre_intensity(smooth_scores[ind])
             add_key_frame(i + 1, ind, intensity, null)
         }
     }
