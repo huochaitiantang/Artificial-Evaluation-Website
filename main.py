@@ -237,6 +237,7 @@ def do_submit(sample_id, label_result):
     
     labels = label_result.encode('utf-8').split()
     usr_name = labels.pop()
+    usr_name = usr_name.decode('utf8')
     print("recept:", clip_id, usr_name, labels)
 
     try:
