@@ -44,7 +44,7 @@ $(document).ready(function(){
                 var age = ans['age']
                 var gender = ans['gender']
 
-                $("#speed").html("Process: " + sample_id + "/" + sample_cnt)
+                $("#speed").html("Process: " + sample_id + "/" + sample_cnt + "[" + ((sample_id / sample_cnt) * 100).toFixed(2) + " %]")
                 $("#emotion").html(emotion)
                 $("#emotion").attr("href", "/refer/" + ans['emotion_cls'])
                 $("#predict").html(predict)
@@ -63,7 +63,7 @@ $(document).ready(function(){
                 init_key_frames(smooth_scores, key_indexs)
                 
                 $("#submit_button").click(function(){
-                    submit_label(sample_id, frame_cnt, sample_cnt)
+                    submit_label(sample_id, sample_cnt)
                 })
 
                 $("#prev_sample").click(function(){
@@ -128,7 +128,7 @@ $(document).ready(function(){
                     frame_id = Math.round(vid.currentTime * 25)
                     frame_id = Math.min(frame_cnt - 1, Math.max(0, frame_id))
                     $("#frame_id").html(format_number(frame_id, 3))
-                    $("#predict_score").html(smooth_scores[frame_id])
+                    $("#predict_score").html(smooth_scores[frame_id].toFixed(5) + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp")
 
                     trs = $("#key_frames").find(".key_frame_item")
                     //console.log(trs)

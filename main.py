@@ -83,7 +83,6 @@ def get_samples():
             f = open("{}/predict_score_smooth/{}.txt".format(args.data_base_dir, clip_id))
             for line in f.readlines():
                 items = line.split()
-                cls = int(items[1])
                 d['smooth_scores'].append(float(items[2 + cls]))
             f.close()
 
@@ -100,7 +99,6 @@ def get_samples():
                 items = line.split()
                 d['frames'].append(os.path.join(frame_dir, items[0]))
                 d['faces'].append(faced[items[0]])
-                cls = int(items[1])
                 d['scores'].append(float(items[2 + cls]))
                 for ii in range(1, 7):
                     predicts[ii] = float(items[2 + ii])
